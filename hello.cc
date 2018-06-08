@@ -13,15 +13,21 @@
 #include <thread>
 #include <cstring>
 
+#include <X11/X.h>
+#include <X11/Xlib.h>
+#include <X11/Xutil.h>
+#include <stdio.h>
+#include <ctype.h>
+#include <jmorecfg.h>
+
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wmissing-noreturn"
-#define EVENT_DEVICE    "/dev/input/event5"
-#define EVENT_TYPE      EV_ABS
-#define EVENT_CODE_X    ABS_X
-#define EVENT_CODE_Y    ABS_Y
+#define EVENT_DEVICE "/dev/input/event5"
+#define EVIOCGABS(abs) _IOR('E', 0x40 + (abs), struct input_absinfo)
 
 typedef input_event InputEvent;
 typedef pollfd PollFd;
+typedef input_absinfo InputAbsinfo;
 
 Display *display;
 Window root;
@@ -29,6 +35,9 @@ int fd;
 size_t eventSize;
 InputEvent event;
 PollFd pollyFd;
+int touchX;
+int touchY;
+bool touchDown;
 
 void initialize() {
     display = XOpenDisplay(NULL);
@@ -72,26 +81,37 @@ void sleep(int milli) {
 
 int main(int argc, char *argv[]) {
     initialize();
-    pollyFd.events = POLLIN;
+
+    InputAbsinfo absinfo{};
+    ioctl(fd, EVIOCGABS(ABS_X), &absinfo);
+    printf("min x   %6d\n", absinfo.minimum);
+    printf("max x   %6d\n", absinfo.maximum);
+    ioctl(fd, EVIOCGABS(ABS_Y), &absinfo);
+    printf("min y   %6d\n", absinfo.minimum);
+    printf("max y   %6d\n", absinfo.maximum);
 
     while (true) {
-//        while (poll(&pollyFd, 1, 10)) {
-//            printf("read %i\n", pollyFd.revents);
-//            read(fd, &event, eventSize);
-//            if (event.type == EVENT_TYPE && (event.code == EVENT_CODE_X || event.code == EVENT_CODE_Y))
-//                printf("%s = %d\n", event.code == EVENT_CODE_X ? "X" : "Y", event.value);
-//            else
-//                printf("%d, %d, %d n", event.type, event.code, event.value);
-//        }
-//
-//        setPointerPosition(100, 200);
+        while (poll(&pollyFd, 1, 10)) {
+            read(fd, &event, eventSize);
 
-        int count;
-        XGetMotionEvents(display, root, CurrentTime - 1000 - 1000, CurrentTime + 1000 * 1000, &count);
-        std::cout << count << "\n";
+            if (event.type == EV_KEY && event.code == BTN_TOUCH)
+                touchDown = event.value;
+
+            else if (event.type == EV_ABS)
+                if (event.code == ABS_X)
+                    touchX = event.value;
+                else if (event.code == ABS_Y)
+                    touchY = event.value;
+
+            printf("%d %d %d\n", touchDown, touchX, touchY);
+        }
 
         sleep(100);
     }
 
     uninitialize();
 }
+
+
+//X: 1266 - 5676
+//y: 1094 - 4760
