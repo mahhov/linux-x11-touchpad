@@ -6,7 +6,8 @@
 #include <poll.h>
 
 #include <X11/extensions/XTest.h>
-
+#include <xcb/xcb.h>
+#include <X11/Xlib.h>
 
 #include <chrono>
 #include <thread>
@@ -54,41 +55,14 @@ void uninitialize() {
 }
 
 void setPointerPosition(int x, int y) {
-    int ignored;
-    unsigned int ignoredu;
+    XWarpPointer(display, None, root, 0, 0, 0, 0, x, y);
+    XFlush(display);
+}
 
-//    XEvent event{};
-//    event.type = ButtonPress;
-//    event.xbutton.button = Button5;
-//
-//    printf("start root: %d\n", root);
-//
-//    XQueryPointer(display, root,
-//                  &event.xbutton.root, &event.xbutton.window, &ignored,
-//                  &ignored, &event.xbutton.x, &event.xbutton.y,
-//                  &ignoredu);
-//    event.xbutton.subwindow = event.xbutton.window;
-//
-//    while (event.xbutton.subwindow) {
-//        printf("%d, %d\n", event.xbutton.subwindow, event.xbutton.window);
-//        event.xbutton.window = event.xbutton.subwindow;
-//        XQueryPointer(display, event.xbutton.window, &event.xbutton.root,
-//                      &event.xbutton.subwindow, &ignored, &ignored,
-//                      &ignored, &ignored, &ignoredu);
-//    }
-//    printf("%d, %d\n", event.xbutton.subwindow, event.xbutton.window);
-//
-//
-//    printf("end send %d, %d\n", &event.xbutton.subwindow, event.xbutton.window);
-
-//    XSendEvent(display, PointerWindow, False, ButtonPressMask, &event);
-
-    XTestFakeButtonEvent(display, 4, True, CurrentTime);
-    XTestFakeButtonEvent(display, 4, False, CurrentTime);
-
-    //    XWarpPointer(display, None, root, 0, 0, 0, 0, x, y);
-
-
+void scroll(int delta) {
+    int button = delta > 0 ? 4 : 5;
+    XTestFakeButtonEvent(display, button, True, CurrentTime);
+    XTestFakeButtonEvent(display, button, False, CurrentTime);
     XFlush(display);
 }
 
@@ -101,17 +75,20 @@ int main(int argc, char *argv[]) {
     pollyFd.events = POLLIN;
 
     while (true) {
-        while (poll(&pollyFd, 1, 10)) {
-            printf("read %i\n", pollyFd.revents);
-            read(fd, &event, eventSize);
-            if (event.type == EVENT_TYPE &&
-                (event.code == EVENT_CODE_X || event.code == EVENT_CODE_Y)) {
+//        while (poll(&pollyFd, 1, 10)) {
+//            printf("read %i\n", pollyFd.revents);
+//            read(fd, &event, eventSize);
+//            if (event.type == EVENT_TYPE && (event.code == EVENT_CODE_X || event.code == EVENT_CODE_Y))
 //                printf("%s = %d\n", event.code == EVENT_CODE_X ? "X" : "Y", event.value);
-            } else;
+//            else
 //                printf("%d, %d, %d n", event.type, event.code, event.value);
-        }
+//        }
+//
+//        setPointerPosition(100, 200);
 
-        setPointerPosition(100, 200);
+        int count;
+        XGetMotionEvents(display, root, CurrentTime - 1000 - 1000, CurrentTime + 1000 * 1000, &count);
+        std::cout << count << "\n";
 
         sleep(100);
     }
