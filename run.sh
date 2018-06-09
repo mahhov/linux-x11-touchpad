@@ -1,4 +1,2 @@
-cmake .
-make
-sudo ./helloWorldC__
+cmake . && make && sudo ./helloWorldC__
 

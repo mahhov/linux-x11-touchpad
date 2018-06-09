@@ -25,6 +25,8 @@ TouchController::TouchController() {
     ioctl(fd, EVIOCGABS(ABS_Y), &absinfo);
     minY = absinfo.minimum;
     maxY = absinfo.maximum;
+
+    touch = {};
 }
 
 TouchController::~TouchController() {
@@ -48,6 +50,11 @@ void TouchController::update() {
                 touch.y = 1. * (touch.rawY - minY) / (maxY - minY);
             }
     }
+}
+
+void TouchController::movePointerPosition(int x, int y) {
+    XWarpPointer(display, None, None, 0, 0, 0, 0, x, y);
+    XFlush(display);
 }
 
 void TouchController::setPointerPosition(int x, int y) {

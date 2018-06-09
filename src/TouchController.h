@@ -37,6 +37,8 @@ public:
 
     void update();
 
+    void movePointerPosition(int x, int y);
+
     void setPointerPosition(int x, int y);
 
     void scroll(int delta);

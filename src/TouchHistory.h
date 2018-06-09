@@ -2,8 +2,8 @@
 #define HELLOWORLDC_TOUCHHISTORY_H
 
 #include <deque>
-#include <tuple>
 #include "Touch.h"
+#include "Point.h"
 
 enum State {
     UP, DOWN, RELEASED, PRESSED
@@ -17,7 +17,7 @@ private:
     State state;
 
 public:
-    TouchHistory(int size);
+    explicit TouchHistory(int size);
 
     void update(Touch touch);
 
@@ -25,14 +25,9 @@ public:
 
     State getState();
 
-    std::tuple<double, double> getAverage();
+    Point getAverage();
 
-    std::tuple<double, double> getMovement(int delta);
-
-private:
-    void clear();
-
-    void add(Touch touch);
+    Point getMovement(int delta);
 };
 
 #endif
