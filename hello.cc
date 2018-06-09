@@ -6,22 +6,10 @@
 #include <poll.h>
 
 #include <X11/extensions/XTest.h>
-#include <xcb/xcb.h>
-#include <X11/Xlib.h>
 
 #include <chrono>
 #include <thread>
-#include <cstring>
 
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <stdio.h>
-#include <ctype.h>
-#include <jmorecfg.h>
-
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wmissing-noreturn"
 #define EVENT_DEVICE "/dev/input/event5"
 #define EVIOCGABS(abs) _IOR('E', 0x40 + (abs), struct input_absinfo)
 
@@ -35,8 +23,8 @@ int fd;
 size_t eventSize;
 InputEvent event;
 PollFd pollyFd;
-int touchX;
-int touchY;
+int minX, maxX, minY, maxY;
+int touchX, touchY;
 bool touchDown;
 
 void initialize() {
@@ -56,6 +44,14 @@ void initialize() {
 
     pollyFd.fd = fd;
     pollyFd.events = POLLIN;
+
+    InputAbsinfo absinfo{};
+    ioctl(fd, EVIOCGABS(ABS_X), &absinfo);
+    minX = absinfo.minimum;
+    maxX = absinfo.maximum;
+    ioctl(fd, EVIOCGABS(ABS_Y), &absinfo);
+    minY = absinfo.minimum;
+    maxY = absinfo.maximum;
 }
 
 void uninitialize() {
@@ -81,14 +77,6 @@ void sleep(int milli) {
 
 int main(int argc, char *argv[]) {
     initialize();
-
-    InputAbsinfo absinfo{};
-    ioctl(fd, EVIOCGABS(ABS_X), &absinfo);
-    printf("min x   %6d\n", absinfo.minimum);
-    printf("max x   %6d\n", absinfo.maximum);
-    ioctl(fd, EVIOCGABS(ABS_Y), &absinfo);
-    printf("min y   %6d\n", absinfo.minimum);
-    printf("max y   %6d\n", absinfo.maximum);
 
     while (true) {
         while (poll(&pollyFd, 1, 10)) {
