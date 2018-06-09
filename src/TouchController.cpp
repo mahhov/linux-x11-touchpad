@@ -37,15 +37,15 @@ void TouchController::update() {
         read(fd, &event, eventSize);
 
         if (event.type == EV_KEY && event.code == BTN_TOUCH)
-            touchState.touchDown = (bool) event.value;
+            touch.touchDown = (bool) event.value;
 
         else if (event.type == EV_ABS)
             if (event.code == ABS_X) {
-                touchState.rawX = event.value;
-                touchState.x = 1. * (touchState.rawX - minX) / (maxX - minX);
+                touch.rawX = event.value;
+                touch.x = 1. * (touch.rawX - minX) / (maxX - minX);
             } else if (event.code == ABS_Y) {
-                touchState.rawY = event.value;
-                touchState.y = 1. * (touchState.rawY - minY) / (maxY - minY);
+                touch.rawY = event.value;
+                touch.y = 1. * (touch.rawY - minY) / (maxY - minY);
             }
     }
 }
@@ -62,6 +62,6 @@ void TouchController::scroll(int delta) {
     XFlush(display);
 }
 
-TouchState TouchController::getTouchState() {
-    return touchState;
+Touch TouchController::getTouch() {
+    return touch;
 }

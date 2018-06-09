@@ -3,7 +3,7 @@
 
 #include <deque>
 #include <tuple>
-#include "TouchState.h"
+#include "Touch.h"
 
 enum State {
     UP, DOWN, RELEASED, PRESSED
@@ -12,16 +12,16 @@ enum State {
 class TouchHistory {
 private:
     int maxSize;
-    std::deque<TouchState> history;
+    std::deque<Touch> history;
     double sumX, sumY;
     State state;
 
 public:
     TouchHistory(int size);
 
-    void update(TouchState touchState);
+    void update(Touch touch);
 
-    TouchState getLastState();
+    Touch getLastTouch();
 
     State getState();
 
@@ -32,7 +32,7 @@ public:
 private:
     void clear();
 
-    void add(TouchState touchState);
+    void add(Touch touch);
 };
 
 #endif

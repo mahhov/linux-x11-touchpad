@@ -8,9 +8,9 @@
 #include <X11/Xlib.h>
 #include <poll.h>
 #include <X11/extensions/XTest.h>
-#include "TouchState.h"
+#include "Touch.h"
 #include "TouchController.h"
-#include "TouchState.h"
+#include "Touch.h"
 
 #define EVENT_DEVICE "/dev/input/event5"
 #define EVIOCGABS(abs) _IOR('E', 0x40 + (abs), struct input_absinfo)
@@ -28,7 +28,7 @@ private:
     PollFd pollyFd;
     InputEvent event;
     int minX, maxX, minY, maxY;
-    TouchState touchState;
+    Touch touch;
 
 public:
     TouchController();
@@ -41,7 +41,7 @@ public:
 
     void scroll(int delta);
 
-    TouchState getTouchState();
+    Touch getTouch();
 };
 
 #endif

@@ -5,14 +5,14 @@ TouchHistory::TouchHistory(int size) {
     maxSize = size;
 }
 
-void TouchHistory::update(TouchState touchState) {
-    if (!touchState.touchDown)
+void TouchHistory::update(Touch touch) {
+    if (!touch.touchDown)
         clear();
     else
-        add(touchState);
+        add(touch);
 }
 
-TouchState TouchHistory::getLastState() {
+Touch TouchHistory::getLastTouch() {
     return history.front();
 }
 
@@ -29,8 +29,8 @@ std::tuple<double, double> TouchHistory::getAverage() {
 std::tuple<double, double> TouchHistory::getMovement(int delta) {
     if (delta < history.size())
         return {-1, -1};
-    TouchState touchState = history[delta];
-    return {touchState.x, touchState.y};
+    Touch touch = history[delta];
+    return {touch.x, touch.y};
 }
 
 void TouchHistory::clear() {
@@ -43,15 +43,15 @@ void TouchHistory::clear() {
         state = RELEASED;
 }
 
-void TouchHistory::add(TouchState touchState) {
-    history.push_front(touchState);
-    sumX += touchState.x;
-    sumY += touchState.y;
+void TouchHistory::add(Touch touch) {
+    history.push_front(touch);
+    sumX += touch.x;
+    sumY += touch.y;
     if (history.size() > maxSize) {
-        touchState = history.back();
+        touch = history.back();
         history.pop_back();
-        sumX -= touchState.x;
-        sumY -= touchState.y;
+        sumX -= touch.x;
+        sumY -= touch.y;
     }
     if (state == PRESSED)
         state = DOWN;
