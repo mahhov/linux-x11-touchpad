@@ -1,1 +1,4 @@
-g++ src/hello.cc -lX11 -lXtst -lxcb && sudo ./a.out
+cmake .
+make
+sudo ./helloWorldC__
+
