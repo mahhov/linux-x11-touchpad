@@ -1,1 +1,1 @@
-g++ hello.cc -lX11 -lXtst -lxcb && sudo ./a.out
+g++ src/hello.cc -lX11 -lXtst -lxcb && sudo ./a.out
