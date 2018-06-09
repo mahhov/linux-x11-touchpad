@@ -17,89 +17,109 @@ typedef input_event InputEvent;
 typedef pollfd PollFd;
 typedef input_absinfo InputAbsinfo;
 
-Display *display;
-Window root;
-int fd;
-size_t eventSize;
-InputEvent event;
-PollFd pollyFd;
-int minX, maxX, minY, maxY;
-int touchX, touchY;
-bool touchDown;
+struct TouchState {
+    int rawX, rawY;
+    double x, y;
+    bool touchDown;
+};
 
-void initialize() {
-    display = XOpenDisplay(NULL);
-    root = DefaultRootWindow(display);
+class TouchController {
+public:
+    TouchController() {
+        display = XOpenDisplay(NULL);
+        root = DefaultRootWindow(display);
 
-    if (getuid() != 0)
-        fprintf(stderr, "You are not root! This may not work...\n");
+        if (getuid() != 0)
+            fprintf(stderr, "You are not root! This may not work...\n");
 
-    fd = open(EVENT_DEVICE, O_RDONLY);
-    fprintf(stderr, "reading %s\n", EVENT_DEVICE);
+        fd = open(EVENT_DEVICE, O_RDONLY);
+        fprintf(stderr, "reading %s\n", EVENT_DEVICE);
 
-    if (fd == -1)
-        fprintf(stderr, "%s is not a vaild device\n", EVENT_DEVICE);
+        if (fd == -1)
+            fprintf(stderr, "%s is not a vaild device\n", EVENT_DEVICE);
 
-    eventSize = sizeof(InputEvent);
+        eventSize = sizeof(InputEvent);
 
-    pollyFd.fd = fd;
-    pollyFd.events = POLLIN;
+        pollyFd.fd = fd;
+        pollyFd.events = POLLIN;
 
-    InputAbsinfo absinfo{};
-    ioctl(fd, EVIOCGABS(ABS_X), &absinfo);
-    minX = absinfo.minimum;
-    maxX = absinfo.maximum;
-    ioctl(fd, EVIOCGABS(ABS_Y), &absinfo);
-    minY = absinfo.minimum;
-    maxY = absinfo.maximum;
-}
+        InputAbsinfo absinfo{};
+        ioctl(fd, EVIOCGABS(ABS_X), &absinfo);
+        minX = absinfo.minimum;
+        maxX = absinfo.maximum;
+        ioctl(fd, EVIOCGABS(ABS_Y), &absinfo);
+        minY = absinfo.minimum;
+        maxY = absinfo.maximum;
+    }
 
-void uninitialize() {
-    XCloseDisplay(display);
-    close(fd);
-}
+    ~TouchController() {
+        XCloseDisplay(display);
+        close(fd);
+    }
 
-void setPointerPosition(int x, int y) {
-    XWarpPointer(display, None, root, 0, 0, 0, 0, x, y);
-    XFlush(display);
-}
+    void update() {
+        while (poll(&pollyFd, 1, 10)) {
+            read(fd, &event, eventSize);
 
-void scroll(int delta) {
-    int button = delta > 0 ? 4 : 5;
-    XTestFakeButtonEvent(display, button, True, CurrentTime);
-    XTestFakeButtonEvent(display, button, False, CurrentTime);
-    XFlush(display);
-}
+            if (event.type == EV_KEY && event.code == BTN_TOUCH)
+                touchState.touchDown = event.value;
+
+            else if (event.type == EV_ABS)
+                if (event.code == ABS_X) {
+                    touchState.rawX = event.value;
+                    touchState.x = 1. * (touchState.rawX - minX) / (maxX - minX);
+                } else if (event.code == ABS_Y) {
+                    touchState.rawY = event.value;
+                    touchState.y = 1. * (touchState.rawY - minY) / (maxY - minY);
+                }
+        }
+    }
+
+    void setPointerPosition(int x, int y) {
+        XWarpPointer(display, None, root, 0, 0, 0, 0, x, y);
+        XFlush(display);
+    }
+
+    void scroll(int delta) {
+        const unsigned int button = delta > 0 ? Button4 : Button5;
+        XTestFakeButtonEvent(display, button, True, CurrentTime);
+        XTestFakeButtonEvent(display, button, False, CurrentTime);
+        XFlush(display);
+    }
+
+    TouchState getTouchState() {
+        return touchState;
+    }
+
+private:
+    Display *display; // todo can we make these constants?
+    Window root;
+    int fd;
+    size_t eventSize;
+    PollFd pollyFd;
+    InputEvent event;
+    int minX, maxX, minY, maxY;
+    TouchState touchState;
+};
 
 void sleep(int milli) {
     std::this_thread::sleep_for(std::chrono::milliseconds(milli));
 }
 
-int main(int argc, char *argv[]) {
-    initialize();
-
-    while (true) {
-        while (poll(&pollyFd, 1, 10)) {
-            read(fd, &event, eventSize);
-
-            if (event.type == EV_KEY && event.code == BTN_TOUCH)
-                touchDown = event.value;
-
-            else if (event.type == EV_ABS)
-                if (event.code == ABS_X)
-                    touchX = event.value;
-                else if (event.code == ABS_Y)
-                    touchY = event.value;
-
-            printf("%d %d %d\n", touchDown, touchX, touchY);
-        }
-
-        sleep(100);
-    }
-
-    uninitialize();
+void printTouchState(TouchState touchState) {
+    printf("%d %f %f\n", touchState.touchDown, touchState.x, touchState.y);
 }
 
+int main(int argc, char *argv[]) {
+    TouchController touchController;
+
+    while (true) {
+        touchController.update();
+        TouchState touchState = touchController.getTouchState();
+        printTouchState(touchState);
+        sleep(100);
+    }
+}
 
 //X: 1266 - 5676
 //y: 1094 - 4760
