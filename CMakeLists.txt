@@ -7,7 +7,8 @@ add_executable(helloWorldC__
         src/hello.cpp
         src/TouchController.cpp
         src/TouchController.h
-        src/TouchState.h)
+        src/TouchState.h src/TouchHistory.cpp
+        src/TouchHistory.h)
 
 find_package(X11)
 find_package(Xtst)

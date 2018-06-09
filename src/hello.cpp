@@ -1,5 +1,6 @@
-#include "TouchController.h"
 #include <thread>
+#include "TouchController.h"
+#include "TouchHistory.h"
 
 void sleep(int milli) {
     std::this_thread::sleep_for(std::chrono::milliseconds(milli));
@@ -10,12 +11,15 @@ void printTouchState(TouchState touchState) {
 }
 
 int main(int argc, char *argv[]) {
-    TouchController touchController;
+    TouchHistory history{10};
+    TouchController controller;
 
     while (true) {
-        touchController.update();
-        TouchState touchState = touchController.getTouchState();
-        printTouchState(touchState);
+        controller.update();
+        history.update(controller.getTouchState());
+        printTouchState(history.getLastState());
+        std::tuple<double, double> avg = history.getAverage();
+        std::cout << "AVG:  " << std::get<0>(avg) << ", " << std::get<1>(avg) << "\n";
         sleep(100);
     }
 }
