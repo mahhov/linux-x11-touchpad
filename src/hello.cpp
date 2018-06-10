@@ -1,6 +1,7 @@
 #include <thread>
 #include "TouchController.h"
 #include "TouchHistory.h"
+#include "GlideHandler.h"
 
 void sleep(int milli) {
     std::this_thread::sleep_for(std::chrono::milliseconds(milli));
@@ -12,33 +13,14 @@ void printTouch(Touch touch) {
 
 int main(int argc, char *argv[]) {
     TouchHistory history{1000};
-    TouchController controller;
+    TouchController controller{};
 
-
-    double vscale = 700, vf = .9, minv = .2;
-    double vx, vy;
-    bool gliding = false;
+    GlideHandler glideHandler{700, .9, .2};
 
     while (true) {
         controller.update();
         history.update(controller.getTouch());
-
-        if (history.getState() == RELEASED) {
-            Point movement = history.getMovement(3);
-            if (gliding = movement.x != -1) {
-                vx = movement.x * vscale;
-                vy = movement.y * vscale;
-                printf("velocity: %f, %f\n", movement.x, movement.y);
-            }
-        } else if (history.getState() == PRESSED)
-            gliding = false;
-
-        if (gliding) {
-            vx *= vf;
-            vy *= vf;
-            gliding = vx * vx + vy * vy > minv;
-            controller.movePointerPosition(vx, vy);
-        }
+        glideHandler.update(history, controller);
 
         sleep(10);
     }
