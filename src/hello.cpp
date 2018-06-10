@@ -15,7 +15,7 @@ int main(int argc, char *argv[]) {
     TouchHistory history{1000};
     TouchController controller{};
 
-    GlideHandler glideHandler{700, .9, .2};
+    GlideHandler glideHandler{3, 700, .9, .2};
 
     while (true) {
         controller.update();

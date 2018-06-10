@@ -1,6 +1,7 @@
 #include "GlideHandler.h"
 
-GlideHandler::GlideHandler(double scale, double friction, double minimum) {
+GlideHandler::GlideHandler(int delta, double scale, double friction, double minimum) {
+    this->delta = delta;
     this->scale = scale;
     this->friction = friction;
     this->minimum = minimum;
@@ -8,7 +9,7 @@ GlideHandler::GlideHandler(double scale, double friction, double minimum) {
 
 void GlideHandler::update(TouchHistory history, TouchController &controller) {
     if (history.getState() == RELEASED)
-        init(history.getMovement(3));
+        init(history.getMovement(delta));
     else if (history.getState() == PRESSED)
         conclude();
     iterate(controller);
