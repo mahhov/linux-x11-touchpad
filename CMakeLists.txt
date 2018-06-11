@@ -5,17 +5,10 @@ set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_CXX_STANDARD 11)
 
-add_executable(helloWorldC__
-        src/hello.cpp
-        src/TouchController.cpp
-        src/TouchController.h
-        src/Touch.h
-        src/TouchHistory.cpp
-        src/TouchHistory.h
-        src/GlideHandler.cpp
-        src/GlideHandler.h
-        src/GlideHandler.cpp
-        src/GlideHandler.h)
+include_directories(src)
+file(GLOB srcFiles src/*.cpp)
+add_executable(helloWorldC__ ${srcFiles})
+
 
 find_package(X11)
 find_package(Xtst)
