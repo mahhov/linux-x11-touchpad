@@ -27,27 +27,35 @@ void TouchHistory::update(Touch touch) {
             sumX -= touch.x;
             sumY -= touch.y;
         }
-        std::cout << "size is: " << history.size() << "\n";
+//        std::cout << "size is: " << history.size() << "\n"; // todo delete
 
     } else
         state = state == RELEASED || state == UP ? UP : RELEASED;
-}
-
-Touch TouchHistory::getLastTouch() {
-    return history.front();
 }
 
 State TouchHistory::getState() {
     return state;
 }
 
+Point TouchHistory::getLastPoint() {
+    return {history.front().x, history.front().y};
+}
+
+Point TouchHistory::getPastPoint(int delta) {
+    if (history.empty())
+        return {-1, -1}; // todo check for and handle this case
+    Touch base = history[std::min(delta, (int) history.size() - 1)];
+    return {base.x, base.y};
+}
+
+Point TouchHistory::getMovement(int delta) {
+    if (history.empty())
+        return {-1, -1}; // todo check for nad handle this case
+    return getLastPoint() - getPastPoint(delta);
+}
+
 Point TouchHistory::getAverage() {
     if (history.empty())
         return {-1, -1};
     return {sumX / history.size(), sumY / history.size()};
-}
-
-Point TouchHistory::getMovement(int delta) {
-    Touch base = history[std::min(delta, (int) history.size() - 1)];
-    return {getLastTouch().x - base.x, getLastTouch().y - base.y};
 }

@@ -21,13 +21,15 @@ public:
 
     void update(Touch touch);
 
-    Touch getLastTouch();
-
     State getState();
 
-    Point getAverage();
+    Point getLastPoint();
+
+    Point getPastPoint(int delta);
 
     Point getMovement(int delta);
+
+    Point getAverage();
 };
 
 #endif
