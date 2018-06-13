@@ -11,6 +11,7 @@ private:
     double boundary, threshold;
     bool active;
     Point center;
+    double scrollFraction;
 
 public:
     ScrollHandler(int delta, double boundary, double threshold);

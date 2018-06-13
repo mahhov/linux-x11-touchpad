@@ -1,3 +1,4 @@
+
 #include "ScrollHandler.h"
 
 double scale(double value, double factor) {
@@ -34,12 +35,16 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
         Point last = history.getLastPoint();
         Point delta = last - base;
 
-        Point relativeBase = base - center;
+        Point relativeBase = base - center; // todo extract
         double relativeBaseMag = !relativeBase;
         if (!relativeBaseMag)
             return;
 
-        double dot = relativeBase % delta - .0001; // todo make constant
+//        double deltaMag = !delta;
+//        if (!deltaMag)
+//            return;
+
+        double dot = relativeBase % delta - .0003; // todo make constant
         double cross = relativeBase * delta;
 
         Point centerShift = dot > 0 ^ cross > 0 ? ++delta : --delta;
@@ -47,29 +52,27 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
 
         double change = -cross / relativeBaseMag;
 
-        int intChange = 0; // todo extract
-        if (change > threshold)
-            intChange = 1;
-        else if (change < -threshold)
-            intChange = -1;
-
-        paint.addPoint({.1, scale(change, 5)});
-        paint.addPoint({.15, scale(threshold, 5)});
-        paint.addPoint({.15, scale(-threshold, 5)});
-        paint.addPoint({.2, scale(intChange, .3)});
+        paint.addPoint({.1, scale(change, 1)});
+        paint.addPoint({.1, scale(0, 1)});
 
         paint.addPoint(last);
         Point fakeBase = last - delta * .1 / !delta;
         paint.addPoint(fakeBase);
         paint.addPoint(center);
 
-        paint.addPoint({.3, scale(dot, 500)});
-        paint.addPoint({.35, scale(cross, 30)});
-
         // todo support slower scrolling speed based on finger movement
         // todo support for very fast finger getting sparse data
+        // todo clean up
+        // todo stop mosue from moving while scroll is active
 //        controller.scroll(intChange);
+        if (scrollFraction != scrollFraction)
+            scrollFraction = 0;
+        scrollFraction += change * 10;
+        int scrollWhole = scrollFraction;
+//        controller.scroll(scrollWhole);
+        scrollFraction -= scrollWhole;
 
+        printf("%f ; %f = %f / %f\n", scrollFraction, change, cross, relativeBaseMag); // todo why nan sometimes
         for (int a = 1; a < 20; a++)
             paint.addPoint(history.getPastPoint(a));
 
