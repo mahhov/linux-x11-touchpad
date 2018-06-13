@@ -10,6 +10,7 @@ private:
     int delta;
     double boundary, threshold;
     bool active;
+    Point center;
 
 public:
     ScrollHandler(int delta, double boundary, double threshold);

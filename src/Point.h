@@ -12,6 +12,8 @@ struct Point {
 
     Point operator/(double scale); // inverse scale
 
+    double operator%(Point point); // dot product
+
     double operator*(Point point); // cross product magnitude
 
     Point operator++(); // clockwise rotation

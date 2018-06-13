@@ -18,6 +18,10 @@ Point Point::operator/(double scale) {
     return {x / scale, y / scale};
 }
 
+double Point::operator%(Point point) {
+    return x * point.x + y * point.y;
+}
+
 double Point::operator*(Point point) {
     return x * point.y - y * point.x;
 }

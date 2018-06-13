@@ -65,7 +65,7 @@ void TouchController::setPointerPosition(int x, int y) {
 void TouchController::scroll(int delta) {
     if (delta == 0)
         return;
-    const unsigned int button = delta < 0 ? Button4 : Button5;
+    const unsigned int button = delta > 0 ? Button4 : Button5;
     XTestFakeButtonEvent(display, button, True, CurrentTime);
     XTestFakeButtonEvent(display, button, False, CurrentTime);
     XFlush(display);

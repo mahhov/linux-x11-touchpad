@@ -1,5 +1,14 @@
 #include "ScrollHandler.h"
 
+double scale(double value, double factor) {
+    double scaled = -value * factor + .5f;
+    if (scaled < 0)
+        scaled = 0;
+    if (scaled > 1)
+        scaled = 1;
+    return scaled;
+}
+
 ScrollHandler::ScrollHandler(int delta, double boundary, double threshold) :
         delta(delta),
         boundary(boundary),
@@ -15,12 +24,12 @@ void ScrollHandler::update(TouchHistory history, TouchController &controller, Pa
 }
 
 void ScrollHandler::init(Point movement) {
-    active = movement.x > boundary;
+    if (active = movement.x > boundary)
+        center = {movement.x - .03, movement.y}; // todo is this needed? if so, make .03 a const
 }
 
 void ScrollHandler::iterate(TouchHistory history, TouchController &controller, Paint &paint) {
     if (active) {
-        Point center = history.getPastPoint(delta * 10);
         Point base = history.getPastPoint(delta);
         Point last = history.getLastPoint();
         Point delta = last - base;
@@ -30,7 +39,13 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
         if (!relativeBaseMag)
             return;
 
-        double change = relativeBase * delta / relativeBaseMag;
+        double dot = relativeBase % delta - .0001; // todo make constant
+        double cross = relativeBase * delta;
+
+        Point centerShift = dot > 0 ^ cross > 0 ? ++delta : --delta;
+        center = last + centerShift / !centerShift * .2;
+
+        double change = -cross / relativeBaseMag;
 
         int intChange = 0; // todo extract
         if (change > threshold)
@@ -38,21 +53,26 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
         else if (change < -threshold)
             intChange = -1;
 
-        Point fakeBase = last - delta * .1 / !delta;
-        double fakeChange = change * 50 + .5f;
-        if (fakeChange < 0)
-            fakeChange = 0;
-        if (fakeChange > 1)
-            fakeChange = 1;
-        paint.addPoint({0, fakeChange});
-        paint.addPoint({.05, threshold * 50 + .5});
-        paint.addPoint({.05, -threshold * 50 + .5});
-        paint.addPoint({.1, intChange * .3 + .5});
+        paint.addPoint({.1, scale(change, 5)});
+        paint.addPoint({.15, scale(threshold, 5)});
+        paint.addPoint({.15, scale(-threshold, 5)});
+        paint.addPoint({.2, scale(intChange, .3)});
+
         paint.addPoint(last);
+        Point fakeBase = last - delta * .1 / !delta;
         paint.addPoint(fakeBase);
         paint.addPoint(center);
 
-        controller.scroll(intChange);
+        paint.addPoint({.3, scale(dot, 500)});
+        paint.addPoint({.35, scale(cross, 30)});
+
+        // todo support slower scrolling speed based on finger movement
+        // todo support for very fast finger getting sparse data
+//        controller.scroll(intChange);
+
+        for (int a = 1; a < 20; a++)
+            paint.addPoint(history.getPastPoint(a));
+
     }
     paint.addPoint({boundary, 0});
     paint.addPoint({boundary, 1});

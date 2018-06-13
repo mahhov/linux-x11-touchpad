@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     TouchController controller{};
 
 //    GlideHandler glideHandler{3, 700, .9, .2};
-    ScrollHandler scrollHandler{1, .85, .0004};
+    ScrollHandler scrollHandler{10, .85, .004};
 
     while (true) {
         paint.removeAllPoints();
