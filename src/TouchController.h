@@ -29,6 +29,8 @@ private:
     InputEvent event;
     int minX, maxX, minY, maxY;
     Touch touch;
+    bool pointerLocked;
+    int pointerLockX, pointerLockY;
 
 public:
     TouchController();
@@ -44,6 +46,10 @@ public:
     void scroll(int delta);
 
     Touch getTouch();
+
+    void lockPointerPosition();
+
+    void unlockPointerPosition();
 };
 
 #endif

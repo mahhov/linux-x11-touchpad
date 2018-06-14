@@ -26,7 +26,7 @@ void ScrollHandler::update(TouchHistory history, TouchController &controller, Pa
     if (history.getState() == PRESSED)
         init(history.getLastPoint());
     else if (history.getState() == RELEASED)
-        conclude();
+        conclude(controller);
     iterate(history, controller, paint);
 }
 
@@ -38,10 +38,10 @@ void ScrollHandler::init(Point movement) {
     }
 }
 
-double x;
-
 void ScrollHandler::iterate(TouchHistory history, TouchController &controller, Paint &paint) {
     if (active) {
+        controller.lockPointerPosition();
+
         Point base = history.getPastPoint(delta);
         if (base.invalid)
             return;
@@ -69,6 +69,7 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
 //        controller.scroll(scrollWhole);
         scrollFraction -= scrollWhole;
 
+        static double x;
         x += change;
 
         for (int a = 1; a <= delta; a++)
@@ -86,10 +87,10 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     paint.addPoint({boundary, 1});
 
     // todo clean up
-    // todo stop mouse from moving while scroll is active
     // todo use x12 to do smaller scroll increments
 }
 
-void ScrollHandler::conclude() {
+void ScrollHandler::conclude(TouchController &controller) {
     active = false;
+    controller.unlockPointerPosition();
 }

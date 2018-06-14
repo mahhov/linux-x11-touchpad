@@ -74,3 +74,20 @@ void TouchController::scroll(int delta) {
 Touch TouchController::getTouch() {
     return touch;
 }
+
+void TouchController::lockPointerPosition() {
+    if (pointerLocked) {
+        setPointerPosition(pointerLockX, pointerLockY);
+        return;
+    }
+
+    pointerLocked = true;
+    Window window;
+    int integer;
+    unsigned int uinteger;
+    XQueryPointer(display, root, &window, &window, &pointerLockX, &pointerLockY, &integer, &integer, &uinteger);
+}
+
+void TouchController::unlockPointerPosition() {
+    pointerLocked = false;
+}

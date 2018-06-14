@@ -18,8 +18,7 @@ int main(int argc, char *argv[]) {
     TouchHistory history{1000};
     TouchController controller{};
 
-//    GlideHandler glideHandler{3, 700, .9, .2};
-    ScrollHandler scrollHandler{2, .085, .004, .05};
+    ScrollHandler scrollHandler{2, .85, .004, .05};
 
     while (true) {
         paint.removeAllPoints();

@@ -25,7 +25,7 @@ private:
 
     void iterate(TouchHistory history, TouchController &controller, Paint &paint);
 
-    void conclude();
+    void conclude(TouchController &controller);
 };
 
 #endif
