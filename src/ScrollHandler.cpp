@@ -34,6 +34,8 @@ void ScrollHandler::init(Point movement) {
         center = {movement.x - .2, movement.y}; // todo make const
 }
 
+double x;
+
 void ScrollHandler::iterate(TouchHistory history, TouchController &controller, Paint &paint) {
     if (active) {
         Point base = history.getPastPoint(delta);
@@ -48,7 +50,7 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
         double cross = relativeBase * movement;
         double dotShift = (cross < 0 ? -cross : cross) / 4; // todo make constant
         double dot = relativeBase % movement - dotShift;
-        if (near0(cross, .002) || near0(!movement, .01))
+        if (near0(cross, .00002) || near0(!movement, .0001)) // todo adjust near0 constants
             return;
 
         Point centerShift = dot > 0 ^ cross > 0 ? ++movement : --movement;
@@ -61,10 +63,12 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
 //        controller.scroll(scrollWhole);
         scrollFraction -= scrollWhole;
 
+        x += change;
+
         for (int a = 1; a <= delta; a++)
             paint.addPoint(history.getPastPoint(a));
-        paint.addPoint({.4, scale(relativeBase % movement, 1 / .001)});
-        paint.addPoint({.1, scale(change, 1)});
+        paint.addPoint({.1, scale(change, 10)});
+        paint.addPoint({.2, scale(x, .1)});
         paint.addPoint({.1, scale(0, 1)});
         paint.addPoint(last);
         Point fakeBase = last - movement * .1 / !movement;
@@ -75,10 +79,10 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     paint.addPoint({boundary, 1});
 
     // todo support slower scrolling speed based on finger movement
-    // todo support for very fast finger getting sparse data
     // todo clean up
     // todo stop mouse from moving while scroll is active
     // todo smoothing filter
+    // use x12 to do smaller scroll increments
 }
 
 void ScrollHandler::conclude() {
