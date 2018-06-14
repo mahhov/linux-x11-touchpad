@@ -56,14 +56,11 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
 
         double change = -cross / !relativeBase; // todo make small circles scroll faster
 
-        if (scrollFraction != scrollFraction)
-            scrollFraction = 0;
         scrollFraction += change * 10;
         int scrollWhole = scrollFraction;
 //        controller.scroll(scrollWhole);
         scrollFraction -= scrollWhole;
 
-        printf("%f ; %f = %f / %f\n", scrollFraction, change, cross, !relativeBase); // todo why nan sometimes
         for (int a = 1; a <= delta; a++)
             paint.addPoint(history.getPastPoint(a));
         paint.addPoint({.4, scale(relativeBase % movement, 1 / .001)});
@@ -81,6 +78,7 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     // todo support for very fast finger getting sparse data
     // todo clean up
     // todo stop mouse from moving while scroll is active
+    // todo smoothing filter
 }
 
 void ScrollHandler::conclude() {
