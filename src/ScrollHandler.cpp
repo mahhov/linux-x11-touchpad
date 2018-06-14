@@ -14,12 +14,13 @@ bool near0(double value, double threshold) {
     return value < threshold && value > -threshold;
 } // todo extract
 
-ScrollHandler::ScrollHandler(int delta, double boundary, double threshold) :
+ScrollHandler::ScrollHandler(int delta, double boundary, double threshold, double smoothness) :
         delta(delta),
         boundary(boundary),
         threshold(threshold),
         active(false),
-        center(Point::invalidPoint) {}
+        center(Point::invalidPoint),
+        smoother(smoothness) {}
 
 void ScrollHandler::update(TouchHistory history, TouchController &controller, Paint &paint) {
     if (history.getState() == PRESSED)
@@ -30,8 +31,11 @@ void ScrollHandler::update(TouchHistory history, TouchController &controller, Pa
 }
 
 void ScrollHandler::init(Point movement) {
-    if (active = movement.x > boundary)
+    if (active = movement.x > boundary) {
         center = {movement.x - .2, movement.y}; // todo make const
+        smoother.reset();
+        scrollFraction = 0;
+    }
 }
 
 double x;
@@ -57,6 +61,8 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
         center = (base + movement / 2) + centerShift / !centerShift * .2;
 
         double change = -cross / !relativeBase; // todo make small circles scroll faster
+        double rawChange = change;
+        change = smoother.smooth(change);
 
         scrollFraction += change * 10;
         int scrollWhole = scrollFraction;
@@ -67,7 +73,8 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
 
         for (int a = 1; a <= delta; a++)
             paint.addPoint(history.getPastPoint(a));
-        paint.addPoint({.1, scale(change, 10)});
+        paint.addPoint({.1, scale(rawChange, 10)});
+        paint.addPoint({.13, scale(change, 10)});
         paint.addPoint({.2, scale(x, .1)});
         paint.addPoint({.1, scale(0, 1)});
         paint.addPoint(last);
@@ -78,11 +85,9 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     paint.addPoint({boundary, 0});
     paint.addPoint({boundary, 1});
 
-    // todo support slower scrolling speed based on finger movement
     // todo clean up
     // todo stop mouse from moving while scroll is active
-    // todo smoothing filter
-    // use x12 to do smaller scroll increments
+    // todo use x12 to do smaller scroll increments
 }
 
 void ScrollHandler::conclude() {

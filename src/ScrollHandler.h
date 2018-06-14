@@ -4,6 +4,7 @@
 #include "TouchHistory.h"
 #include "TouchController.h"
 #include "Paint.h"
+#include "Smoother.h"
 
 class ScrollHandler {
 private:
@@ -11,10 +12,11 @@ private:
     double boundary, threshold;
     bool active;
     Point center;
+    Smoother smoother;
     double scrollFraction;
 
 public:
-    ScrollHandler(int delta, double boundary, double threshold);
+    ScrollHandler(int delta, double boundary, double threshold, double smoothness);
 
     void update(TouchHistory history, TouchController &controller, Paint &paint);
 
