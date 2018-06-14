@@ -44,13 +44,13 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
         Point last = history.getLastPoint();
         Point movement = last - base;
         Point relativeBase = base - center;
-        if (near0(!relativeBase, .01))
+        if (near0(!movement, .0001) || near0(!relativeBase, .01))
             return;
 
         double cross = relativeBase * movement;
         double dotShift = (cross < 0 ? -cross : cross) / 4; // todo make constant
         double dot = relativeBase % movement - dotShift;
-        if (near0(cross, .00002) || near0(!movement, .0001)) // todo adjust near0 constants
+        if (near0(cross, .00002)) // todo adjust near0 constants
             return;
 
         Point centerShift = dot > 0 ^ cross > 0 ? ++movement : --movement;
