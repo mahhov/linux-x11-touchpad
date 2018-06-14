@@ -2,6 +2,12 @@
 #include <cstdio>
 #include "Point.h"
 
+const Point Point::invalidPoint{};
+
+Point::Point(double x, double y) : x(x), y(y), invalid(false), mag(-1) {}
+
+Point::Point() : x(-1), y(-1), invalid(true), mag(-1) {}
+
 Point Point::operator+(Point point) {
     return {x + point.x, y + point.y};
 }
@@ -35,7 +41,9 @@ Point Point::operator--() {
 }
 
 double Point::operator!() {
-    return sqrt(x * x + y * y);
+    if (mag == -1)
+        mag = sqrt(x * x + y * y);
+    return mag;
 }
 
 void Point::debugPrint() {

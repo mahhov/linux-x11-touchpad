@@ -43,19 +43,19 @@ Point TouchHistory::getLastPoint() {
 
 Point TouchHistory::getPastPoint(int delta) {
     if (history.empty())
-        return {-1, -1}; // todo check for and handle this case
+        return Point::invalidPoint; // todo check for and handle this case
     Touch base = history[std::min(delta, (int) history.size() - 1)];
     return {base.x, base.y};
 }
 
 Point TouchHistory::getMovement(int delta) {
     if (history.empty())
-        return {-1, -1}; // todo check for nad handle this case
+        return Point::invalidPoint; // todo check for nad handle this case
     return getLastPoint() - getPastPoint(delta);
 }
 
 Point TouchHistory::getAverage() {
     if (history.empty())
-        return {-1, -1};
+        return Point::invalidPoint;
     return {sumX / history.size(), sumY / history.size()};
 }

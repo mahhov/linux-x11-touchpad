@@ -2,7 +2,13 @@
 #define HELLOWORLDC_POINT_H
 
 struct Point {
+    static const Point invalidPoint;
+
+    bool invalid;
     double x, y;
+    double mag;
+
+    Point(double x, double y);
 
     Point operator+(Point point);
 
@@ -23,6 +29,9 @@ struct Point {
     double operator!(); // magnitude
 
     void debugPrint();
+
+private:
+    Point(); // invalid constructor
 };
 
 #endif

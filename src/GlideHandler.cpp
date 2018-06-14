@@ -16,7 +16,7 @@ void GlideHandler::update(TouchHistory history, TouchController &controller) {
 }
 
 void GlideHandler::init(Point movement) {
-    if (active = movement.x != -1) {
+    if (active = !movement.invalid) {
         x = movement.x * scale;
         y = movement.y * scale;
     }
