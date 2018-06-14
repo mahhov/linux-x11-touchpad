@@ -6,7 +6,11 @@ private:
     double weight, aggregate;
 
 public:
-    Smoother(double weight);
+    explicit Smoother(double weight);
+
+    void reset();
+
+    double smooth(double value);
 
     void add(double value);
 
