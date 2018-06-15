@@ -18,6 +18,7 @@ int main(int argc, char *argv[]) {
     TouchHistory history{1000};
     TouchController controller{};
 
+//    GlideHandler glideHandler{3, 700, .9, .2};
     ScrollHandler scrollHandler{2, .85, .004, .05};
 
     while (true) {
@@ -34,3 +35,5 @@ int main(int argc, char *argv[]) {
 }
 
 // todo change all object paramters to be by reference
+// todo if scrolling, disable mouse gliding at end of scroll
+// todo scroll gliding
