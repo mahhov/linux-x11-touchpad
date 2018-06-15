@@ -12,7 +12,11 @@ public:
 
     double smooth(double value);
 
+    double smooth(double value, double fraction);
+
     void add(double value);
+
+    void add(double value, double fraction);
 
     double get();
 };
