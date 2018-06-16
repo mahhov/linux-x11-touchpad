@@ -21,7 +21,6 @@ void ScrollHandler::update(TouchHistory history, TouchController &controller, Pa
 static Point centerShift = Point::invalidPoint;
 static Smoother smoother1{.05};
 static bool line;
-static double tempMax;
 
 void ScrollHandler::init(Point movement) {
     if (active = movement.x > boundary) {
@@ -31,7 +30,6 @@ void ScrollHandler::init(Point movement) {
         scrollFraction = 0;
         smoother1.reset();
         line = true;
-        tempMax = 0;
     }
 }
 
@@ -41,9 +39,8 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
         controller.lockPointerPosition();
 
         Point doubleBase = history.getPastPoint(delta * 2 + 1);
+        if (doubleBase.invalid) return;
         Point base = history.getPastPoint(delta);
-        if (base.invalid)
-            return;
         Point last = history.getLastPoint();
         Point movement = last - base;
         Point relativeBase = base - center;
@@ -60,24 +57,21 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
         if (curvature < 0)
             curvature = -curvature;
         curvature = smoother1.smooth(curvature, !vec3 * 15);
-        tempMax = curvature > tempMax ? curvature : tempMax;
-        printf("temp max curvature %f fraction %f\n", tempMax, !vec3 * 15);
-        double change;
 
         if (line && !near0(curvature, 2.5))
             line = false;
         if (!line && near0(curvature, 1))
             line = true;
 
-        if (line) {
+        double change;
+
+        if (line)
             change = vec2 * relativeBase / !relativeBase * 20;
-            printf("LINE curv %f change %f\n", curvature, change);
-        } else {
+        else {
             centerShift = last - doubleBase;
             centerShift = cros < 0 ? ++centerShift : --centerShift;
             centerShift = centerShift / !centerShift * .2;
             change = cros * 2;
-            printf("CIRCLE curv %f change %f\n", curvature, change);
         }
         center = base + centerShift;
 
@@ -112,7 +106,6 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
 
     // todo clean up
     // todo use x12 to do smaller scroll increments
-    // when small finger movements, scrolls 2 fast and center gets messed up
 }
 
 void ScrollHandler::conclude(TouchController &controller) {
