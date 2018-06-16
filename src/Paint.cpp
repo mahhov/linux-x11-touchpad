@@ -29,3 +29,11 @@ void Paint::repaint() {
     XSync(d, true);
 }
 
+double Paint::scale(double value, double factor) {
+    double scaled = -value * factor + .5f;
+    if (scaled < 0)
+        scaled = 0;
+    if (scaled > 1)
+        scaled = 1;
+    return scaled;
+}

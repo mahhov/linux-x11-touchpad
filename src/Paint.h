@@ -24,6 +24,8 @@ public:
     void addPoint(Point p);
 
     void repaint();
+
+    static double scale(double value, double factor);
 };
 
 #endif

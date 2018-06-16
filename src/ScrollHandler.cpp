@@ -1,18 +1,6 @@
-
 #include "ScrollHandler.h"
 
-double scale(double value, double factor) {
-    double scaled = -value * factor + .5f;
-    if (scaled < 0)
-        scaled = 0;
-    if (scaled > 1)
-        scaled = 1;
-    return scaled;
-} // todo extract
-
-bool near0(double value, double threshold) {
-    return value < threshold && value > -threshold;
-} // todo extract
+static bool near0(double value, double threshold);
 
 ScrollHandler::ScrollHandler(int delta, double boundary, double threshold, double smoothness) :
         delta(delta),
@@ -113,12 +101,12 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
         paint.addPoint(last - movement * .1 / !movement); // base tail
         paint.addPoint(center);
 
-        paint.addPoint({.1, scale(rawChange, .3)});
-        paint.addPoint({.13, scale(change, .3)});
-        paint.addPoint({.3, scale(curvature, 1. / 80)});
+        paint.addPoint({.1, Paint::scale(rawChange, .3)});
+        paint.addPoint({.13, Paint::scale(change, .3)});
+        paint.addPoint({.3, Paint::scale(curvature, 1. / 80)});
     }
-    paint.addPoint({.2, scale(x, .01)});
-    paint.addPoint({.1, scale(0, 1)});
+    paint.addPoint({.2, Paint::scale(x, .01)});
+    paint.addPoint({.1, Paint::scale(0, 1)});
     paint.addPoint({boundary, 0});
     paint.addPoint({boundary, 1});
 
@@ -130,4 +118,8 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
 void ScrollHandler::conclude(TouchController &controller) {
     active = false;
     controller.unlockPointerPosition();
+}
+
+static bool near0(double value, double threshold) {
+    return value < threshold && value > -threshold;
 }
