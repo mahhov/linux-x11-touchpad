@@ -6,7 +6,7 @@ struct Point {
 
     bool invalid;
     double x, y;
-    double mag;
+    double mag, magSq;
 
     Point(double x, double y);
 
@@ -27,6 +27,8 @@ struct Point {
     Point operator--(); // counter clockwise rotation
 
     double operator!(); // magnitude
+
+    double operator~(); // magnitude squared
 
     void debugPrint();
 

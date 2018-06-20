@@ -4,9 +4,9 @@
 
 const Point Point::invalidPoint{};
 
-Point::Point(double x, double y) : x(x), y(y), invalid(false), mag(-1) {}
+Point::Point(double x, double y) : x(x), y(y), invalid(false), mag(-1), magSq(-1) {}
 
-Point::Point() : x(-1), y(-1), invalid(true), mag(-1) {}
+Point::Point() : x(-1), y(-1), invalid(true), mag(-1), magSq(-1) {}
 
 Point Point::operator+(Point point) {
     return {x + point.x, y + point.y};
@@ -42,8 +42,14 @@ Point Point::operator--() {
 
 double Point::operator!() {
     if (mag == -1)
-        mag = sqrt(x * x + y * y);
+        mag = sqrt(~*this);
     return mag;
+}
+
+double Point::operator~() {
+    if (magSq == -1)
+        magSq = x * x + y * y;
+    return magSq;
 }
 
 void Point::debugPrint() {
