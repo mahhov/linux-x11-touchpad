@@ -1,6 +1,6 @@
 #include "GlideHandler.h"
 
-GlideHandler::GlideHandler(int delta, double scale, double friction, double minimum) {
+GlideHandler::GlideHandler(int delta, double scale, double friction, double minimum) : velocity(Point::invalidPoint) {
     this->delta = delta;
     this->scale = scale;
     this->friction = friction;
@@ -9,25 +9,23 @@ GlideHandler::GlideHandler(int delta, double scale, double friction, double mini
 
 void GlideHandler::update(TouchHistory history, TouchController &controller) {
     if (history.getState() == RELEASED)
-        init(history.getMovement(delta));
+        init(history);
     else if (history.getState() == PRESSED)
         conclude();
     iterate(controller);
 }
 
-void GlideHandler::init(Point movement) {
-    if (active = !movement.invalid) {
-        x = movement.x * scale;
-        y = movement.y * scale;
-    }
+void GlideHandler::init(TouchHistory history) {
+    Point pointDelta = (history.getLastPoint() - history.getPastPoint(delta)) * scale;
+    if (active = history.getSize() > delta && ~pointDelta > minimum)
+        velocity = pointDelta;
 }
 
 void GlideHandler::iterate(TouchController &controller) {
     if (active) {
-        x *= friction;
-        y *= friction;
-        active = x * x + y * y > minimum;
-        controller.movePointerPosition(x, y);
+        velocity = velocity * friction;
+        active = ~velocity > minimum;
+        controller.movePointerPosition(velocity.x, velocity.y);
     }
 }
 

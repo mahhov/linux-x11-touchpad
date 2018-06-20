@@ -9,7 +9,7 @@ class GlideHandler {
 private:
     int delta;
     double scale, friction, minimum;
-    double x, y;
+    Point velocity;
     bool active;
 
 public:
@@ -18,7 +18,7 @@ public:
     void update(TouchHistory history, TouchController &controller);
 
 private:
-    void init(Point movement);
+    void init(TouchHistory history);
 
     void iterate(TouchController &controller);
 

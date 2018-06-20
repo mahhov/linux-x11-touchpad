@@ -2,6 +2,7 @@
 #include "TouchController.h"
 #include "TouchHistory.h"
 #include "ScrollHandler.h"
+#include "GlideHandler.h"
 
 void sleep(int milli) {
     std::this_thread::sleep_for(std::chrono::milliseconds(milli));
@@ -18,15 +19,15 @@ int main(int argc, char *argv[]) {
     TouchHistory history{1000};
     TouchController controller{};
 
-//    GlideHandler glideHandler{3, 700, .9, .2};
-    ScrollHandler scrollHandler{2, .85, .004, .13};
+    GlideHandler glideHandler{3, 700, .9, 50};
+    ScrollHandler scrollHandler{2, .9, .004, .13};
 
     while (true) {
         paint.removeAllPoints();
 
         controller.update();
         history.update(controller.getTouch());
-//        glideHandler.update(history, controller);
+        glideHandler.update(history, controller);
         scrollHandler.update(history, controller, paint);
 
         paint.repaint();

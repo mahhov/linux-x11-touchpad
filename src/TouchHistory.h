@@ -13,7 +13,6 @@ class TouchHistory {
 private:
     int maxSize;
     std::deque<Touch> history;
-    double sumX, sumY;
     State state;
 
 public:
@@ -27,9 +26,7 @@ public:
 
     Point getPastPoint(int delta);
 
-    Point getMovement(int delta);
-
-    Point getAverage();
+    int getSize();
 };
 
 #endif
