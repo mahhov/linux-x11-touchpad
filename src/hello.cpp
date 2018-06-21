@@ -19,16 +19,20 @@ int main(int argc, char *argv[]) {
     TouchHistory history{1000};
     TouchController controller{};
 
-    GlideHandler glideHandler{3, 700, .9, 1, 50};
     ScrollHandler scrollHandler{2, .9, .004, .13};
+    GlideHandler glideHandler{3, 700, .9, 1, 50};
+//    ScrollGlideHandler scrollGlideHandler();
 
     while (true) {
         paint.removeAllPoints();
 
         controller.update();
         history.update(controller.getTouch());
-        glideHandler.update(history, controller);
-        scrollHandler.update(history, controller, paint);
+        double scrollStatus = scrollHandler.update(history, controller, paint);
+        if (scrollStatus == NOT_SCROLLING)
+            glideHandler.update(history, controller);
+//        if (scrollStatus != SCROLLING)
+//            scrollGlideHandler.update(scrollStatus, controller);
 
         paint.repaint();
         sleep(2);
@@ -36,5 +40,4 @@ int main(int argc, char *argv[]) {
 }
 
 // todo change all object paramters to be by reference
-// todo if scrolling, disable mouse gliding at end of scroll
 // todo scroll gliding

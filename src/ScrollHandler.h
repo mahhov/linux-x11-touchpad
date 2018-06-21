@@ -6,6 +6,9 @@
 #include "Paint.h"
 #include "Smoother.h"
 
+const int NOT_SCROLLING = -1;
+const int SCROLLING = -2;
+
 class ScrollHandler {
 private:
     int delta;
@@ -14,11 +17,12 @@ private:
     Point center;
     Smoother smoother;
     double scrollFraction;
+    double lastScroll;
 
 public:
     ScrollHandler(int delta, double boundary, double threshold, double smoothness);
 
-    void update(TouchHistory history, TouchController &controller, Paint &paint);
+    double update(TouchHistory history, TouchController &controller, Paint &paint);
 
 private:
     void init(Point movement);
