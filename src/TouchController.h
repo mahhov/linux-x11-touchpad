@@ -13,7 +13,6 @@
 #include "Touch.h"
 
 #define EVENT_DEVICE "/dev/input/event5" // todo determien which event stream is correct one
-#define EVIOCGABS(abs) _IOR('E', 0x40 + (abs), struct input_absinfo)
 
 typedef input_event InputEvent;
 typedef pollfd PollFd;
