@@ -8,12 +8,12 @@
 class GlideHandler {
 private:
     int delta;
-    double scale, friction, minimum;
+    double scale, friction, minimum, minimumInitial;
     Point velocity;
     bool active;
 
 public:
-    GlideHandler(int delta, double scale, double friction, double minimum);
+    GlideHandler(int delta, double scale, double friction, double minimum, double minimumInitial);
 
     void update(TouchHistory history, TouchController &controller);
 

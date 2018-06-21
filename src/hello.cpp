@@ -19,7 +19,7 @@ int main(int argc, char *argv[]) {
     TouchHistory history{1000};
     TouchController controller{};
 
-    GlideHandler glideHandler{3, 700, .9, 50};
+    GlideHandler glideHandler{3, 700, .9, 1, 50};
     ScrollHandler scrollHandler{2, .9, .004, .13};
 
     while (true) {
