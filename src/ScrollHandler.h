@@ -5,9 +5,7 @@
 #include "TouchController.h"
 #include "Paint.h"
 #include "Smoother.h"
-
-const int NOT_SCROLLING = -1;
-const int SCROLLING = -2;
+#include "ScrollState.h"
 
 class ScrollHandler {
 private:
@@ -17,12 +15,11 @@ private:
     Point center;
     Smoother smoother;
     double scrollFraction;
-    double lastScroll;
 
 public:
     ScrollHandler(int delta, double boundary, double threshold, double smoothness);
 
-    double update(TouchHistory history, TouchController &controller, Paint &paint);
+    ScrollState update(TouchHistory history, TouchController &controller, Paint &paint);
 
 private:
     void init(Point movement);
@@ -30,6 +27,10 @@ private:
     void iterate(TouchHistory history, TouchController &controller, Paint &paint);
 
     void conclude(TouchController &controller);
+
+    static ScrollActivity getScrollActivity(bool prevActive, bool active);
+
+    static bool near0(double value, double threshold);
 };
 
 #endif

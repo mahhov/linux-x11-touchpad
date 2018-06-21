@@ -1,7 +1,5 @@
 #include "ScrollHandler.h"
 
-static bool near0(double value, double threshold);
-
 ScrollHandler::ScrollHandler(int delta, double boundary, double threshold, double smoothness) :
         delta(delta),
         boundary(boundary),
@@ -10,7 +8,7 @@ ScrollHandler::ScrollHandler(int delta, double boundary, double threshold, doubl
         center(Point::invalidPoint),
         smoother(smoothness) {}
 
-double ScrollHandler::update(TouchHistory history, TouchController &controller, Paint &paint) {
+ScrollState ScrollHandler::update(TouchHistory history, TouchController &controller, Paint &paint) {
     bool prevActive = active;
 
     if (history.getState() == PRESSED)
@@ -19,7 +17,7 @@ double ScrollHandler::update(TouchHistory history, TouchController &controller, 
         conclude(controller);
     iterate(history, controller, paint);
 
-    return active ? SCROLLING : !prevActive ? NOT_SCROLLING : lastScroll;
+    return ScrollState{smoother.get(), getScrollActivity(prevActive, active)};
 }
 
 static Point centerShift = Point::invalidPoint;
@@ -92,8 +90,6 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     controller.scroll(scrollWhole);
     scrollFraction -= scrollWhole;
 
-    lastScroll = change;
-
     x += change;
     if (x > 50)
         x -= 100;
@@ -123,6 +119,12 @@ void ScrollHandler::conclude(TouchController &controller) {
     controller.unlockPointerPosition();
 }
 
-static bool near0(double value, double threshold) {
+ScrollActivity ScrollHandler::getScrollActivity(bool prevActive, bool active) {
+    if (prevActive)
+        return active ? ScrollActivity::SCROLLING : ScrollActivity::STOPPED_SCROLLING;
+    return active ? ScrollActivity::STARTED_SCROLLING : ScrollActivity::NOT_SCROLLING;
+}
+
+bool ScrollHandler::near0(double value, double threshold) {
     return value < threshold && value > -threshold;
 }

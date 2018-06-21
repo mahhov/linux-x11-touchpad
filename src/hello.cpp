@@ -28,8 +28,8 @@ int main(int argc, char *argv[]) {
 
         controller.update();
         history.update(controller.getTouch());
-        double scrollStatus = scrollHandler.update(history, controller, paint);
-        if (scrollStatus == NOT_SCROLLING)
+        ScrollState scrollState = scrollHandler.update(history, controller, paint);
+        if (scrollState.activity == ScrollActivity::STARTED_SCROLLING || scrollState.activity == ScrollActivity::NOT_SCROLLING)
             glideHandler.update(history, controller);
 //        if (scrollStatus != SCROLLING)
 //            scrollGlideHandler.update(scrollStatus, controller);
