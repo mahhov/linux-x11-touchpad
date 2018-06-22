@@ -9,7 +9,6 @@ include_directories(src)
 file(GLOB srcFiles src/*.cpp)
 add_executable(helloWorldC__ ${srcFiles})
 
-
 find_package(X11)
 find_package(Xtst)
 

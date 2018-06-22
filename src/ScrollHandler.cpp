@@ -1,5 +1,13 @@
 #include "ScrollHandler.h"
 
+
+static Point centerShift = Point::invalidPoint; // todo cleanup
+static Smoother smoother1{.5};
+static bool line;
+static double x;
+static Point base = Point::invalidPoint, doubleBase = Point::invalidPoint;
+static Smoother smootherLastScroll{.13};
+
 ScrollHandler::ScrollHandler(int delta, double boundary, double threshold, double smoothness) :
         delta(delta),
         boundary(boundary),
@@ -18,14 +26,8 @@ ScrollState ScrollHandler::update(TouchHistory history, TouchController &control
         conclude(controller);
     iterate(history, controller, paint);
 
-    return ScrollState{smoother.get(), getScrollActivity(prevActive, active)};
+    return ScrollState{smootherLastScroll.get(), getScrollActivity(prevActive, active)};
 }
-
-static Point centerShift = Point::invalidPoint; // todo cleanup
-static Smoother smoother1{.5};
-static bool line;
-
-static Point base = Point::invalidPoint, doubleBase = Point::invalidPoint;
 
 void ScrollHandler::init(Point movement) {
     if (!(active = movement.x > boundary))
@@ -34,6 +36,7 @@ void ScrollHandler::init(Point movement) {
     centerShift = {-.2, 0};
     center = {movement.x - .2, movement.y}; // todo make const
     smoother.reset();
+    smootherLastScroll.reset();
     accumulator.reset();
     smoother1.reset();
     line = true;
@@ -60,10 +63,10 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
         return;
     }
 
-    if (!(lastPoint - base) < minDistance)
+    if (!(lastPoint - base) < minDistance) {
+        smootherLastScroll.smooth(0);
         return;
-
-    static double x;
+    }
 
     controller.lockPointerPosition();
 
@@ -103,6 +106,7 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
 
     double rawChange = change;
     change = smoother.smooth(change);
+    smootherLastScroll.smooth(change);
     x += change;
 
     controller.scroll(accumulator.accumulate(change));
