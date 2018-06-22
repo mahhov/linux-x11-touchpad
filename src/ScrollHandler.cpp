@@ -21,8 +21,8 @@ ScrollState ScrollHandler::update(TouchHistory history, TouchController &control
     return ScrollState{smoother.get(), getScrollActivity(prevActive, active)};
 }
 
-static Point centerShift = Point::invalidPoint;
-static Smoother smoother1{.05};
+static Point centerShift = Point::invalidPoint; // todo cleanup
+static Smoother smoother1{.5};
 static bool line;
 
 void ScrollHandler::init(Point movement) {
