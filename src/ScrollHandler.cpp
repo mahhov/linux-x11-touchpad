@@ -25,6 +25,8 @@ static Point centerShift = Point::invalidPoint; // todo cleanup
 static Smoother smoother1{.5};
 static bool line;
 
+static Point base = Point::invalidPoint, doubleBase = Point::invalidPoint;
+
 void ScrollHandler::init(Point movement) {
     if (!(active = movement.x > boundary))
         return;
@@ -35,24 +37,39 @@ void ScrollHandler::init(Point movement) {
     accumulator.reset();
     smoother1.reset();
     line = true;
+    base = Point::invalidPoint;
+    doubleBase = Point::invalidPoint;
 }
 
 void ScrollHandler::iterate(TouchHistory history, TouchController &controller, Paint &paint) {
     if (!active)
         return;
 
+    Point lastPoint = history.getLastPoint();
+
+    if (doubleBase.invalid) {
+        doubleBase = lastPoint;
+        return;
+    }
+
+    double minDistance = .005;
+
+    if (base.invalid) {
+        if (!(lastPoint - doubleBase) > minDistance)
+            base = lastPoint;
+        return;
+    }
+
+    if (!(lastPoint - base) < minDistance)
+        return;
+
     static double x;
 
     controller.lockPointerPosition();
 
-    Point doubleBase = history.getPastPoint(delta * 2 + 1);
-    if (doubleBase.invalid)
-        return;
-    Point base = history.getPastPoint(delta);
-    Point last = history.getLastPoint();
+    Point last = lastPoint;
     Point movement = last - base;
     Point relativeBase = base - center;
-    printf("%f\n", !movement);
     if (near0(!movement, .003) || near0(!relativeBase, .01))
         return;
 
@@ -111,6 +128,9 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
 
     // todo clean up
     // todo use x12 to do smaller scroll increments
+
+    doubleBase = base;
+    base = lastPoint;
 }
 
 void ScrollHandler::conclude(TouchController &controller) {
