@@ -41,4 +41,3 @@ int main(int argc, char *argv[]) {
 }
 
 // todo change all object paramters to be by reference
-// todo scroll gliding
