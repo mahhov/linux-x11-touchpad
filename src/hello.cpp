@@ -22,7 +22,7 @@ int main(int argc, char *argv[]) {
 
     ScrollHandler scrollHandler{2, .9, .004, .13};
     GlideHandler glideHandler{3, 700, .9, 1, 50};
-    ScrollGlideHandler scrollGlideHandler{1, .9, .1, .1};
+    ScrollGlideHandler scrollGlideHandler{1, .95, .1, .3};
 
     while (true) {
         paint.removeAllPoints();
