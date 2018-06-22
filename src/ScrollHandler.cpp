@@ -52,7 +52,8 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     Point last = history.getLastPoint();
     Point movement = last - base;
     Point relativeBase = base - center;
-    if (near0(!movement, .0001) || near0(!relativeBase, .01))
+    printf("%f\n", !movement);
+    if (near0(!movement, .003) || near0(!relativeBase, .01))
         return;
 
     Point vec1 = base - doubleBase;
