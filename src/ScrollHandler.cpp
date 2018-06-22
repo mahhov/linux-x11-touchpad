@@ -6,7 +6,8 @@ ScrollHandler::ScrollHandler(int delta, double boundary, double threshold, doubl
         threshold(threshold),
         active(false),
         center(Point::invalidPoint),
-        smoother(smoothness) {}
+        smoother(smoothness) {
+}
 
 ScrollState ScrollHandler::update(TouchHistory history, TouchController &controller, Paint &paint) {
     bool prevActive = active;
@@ -31,7 +32,7 @@ void ScrollHandler::init(Point movement) {
     centerShift = {-.2, 0};
     center = {movement.x - .2, movement.y}; // todo make const
     smoother.reset();
-    scrollFraction = 0;
+    accumulator.reset();
     smoother1.reset();
     line = true;
 }
@@ -84,13 +85,10 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
 
     double rawChange = change;
     change = smoother.smooth(change);
-
-    scrollFraction += change;
-    int scrollWhole = scrollFraction;
-    controller.scroll(scrollWhole);
-    scrollFraction -= scrollWhole;
-
     x += change;
+
+    controller.scroll(accumulator.accumulate(change));
+
     if (x > 50)
         x -= 100;
     if (x < -50)

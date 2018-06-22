@@ -4,8 +4,7 @@ GlideHandler::GlideHandler(int delta, double scale, double friction, double mini
                                                                                                               friction(friction),
                                                                                                               minimum(minimum),
                                                                                                               minimumInitial(minimumInitial),
-                                                                                                              velocity(Point::invalidPoint) {
-}
+                                                                                                              velocity(Point::invalidPoint) {}
 
 void GlideHandler::update(TouchHistory history, TouchController &controller) {
     if (history.getState() == RELEASED)
@@ -22,11 +21,11 @@ void GlideHandler::init(TouchHistory history) {
 }
 
 void GlideHandler::iterate(TouchController &controller) {
-    if (active) {
-        velocity = velocity * friction;
-        active = ~velocity > minimum;
-        controller.movePointerPosition(velocity.x, velocity.y);
-    }
+    if (!active)
+        return;
+    velocity = velocity * friction;
+    active = ~velocity > minimum;
+    controller.movePointerPosition((int) velocity.x, (int) velocity.y);
 }
 
 void GlideHandler::conclude() {

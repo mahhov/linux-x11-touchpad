@@ -7,8 +7,8 @@
 
 class GlideHandler {
 private:
-    int delta;
-    double scale, friction, minimum, minimumInitial;
+    const int delta;
+    const double scale, friction, minimum, minimumInitial;
     Point velocity;
     bool active;
 

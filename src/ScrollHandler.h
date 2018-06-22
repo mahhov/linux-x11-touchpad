@@ -6,15 +6,16 @@
 #include "Paint.h"
 #include "Smoother.h"
 #include "ScrollState.h"
+#include "Accumulator.h"
 
 class ScrollHandler {
 private:
-    int delta;
-    double boundary, threshold;
+    const int delta;
+    const double boundary, threshold;
     bool active;
     Point center;
     Smoother smoother;
-    double scrollFraction;
+    Accumulator accumulator;
 
 public:
     ScrollHandler(int delta, double boundary, double threshold, double smoothness);
