@@ -2,18 +2,16 @@
 #include "ScrollHandler.h"
 
 static Point centerShift = Point::invalidPoint; // todo cleanup
-static Smoother curvatureSmoother{.5};
 static bool line;
 static Point base = Point::invalidPoint, doubleBase = Point::invalidPoint;
-static Smoother smootherLastScroll{.13};
+static Smoother lastChangeSmoother{.13};
 
-static Smoother alcs{.1};
-static Smoother accs{.1};
-static Smoother acs{.1};
+static Smoother absLineChangeSmoother{.1};
+static Smoother absCircleChangeSmoother{.1};
 
 double minDistance = .005, minDistanceSq = minDistance * minDistance;
-double lineScale = 12.5;
-double circleScale = 4.25;
+double lineScale = 14;
+double circleScale = 4;
 double lineModeChangeResistance = 1.5;
 double transformMin = .15;
 
@@ -23,7 +21,7 @@ ScrollHandler::ScrollHandler(int delta, double boundary, double threshold, doubl
         threshold(threshold),
         active(false),
         center(Point::invalidPoint),
-        smoother(smoothness) {
+        changeSmoother(smoothness) {
 }
 
 ScrollState ScrollHandler::update(TouchHistory history, TouchController &controller, Paint &paint) {
@@ -35,7 +33,7 @@ ScrollState ScrollHandler::update(TouchHistory history, TouchController &control
         conclude(controller);
     iterate(history, controller, paint);
 
-    return ScrollState{smootherLastScroll.get(), getScrollActivity(prevActive, active)};
+    return ScrollState{lastChangeSmoother.get(), getScrollActivity(prevActive, active)};
 }
 
 void ScrollHandler::init(Point movement) {
@@ -44,16 +42,14 @@ void ScrollHandler::init(Point movement) {
 
     centerShift = {-.2, 0};
     center = {movement.x - .2, movement.y}; // todo make const
-    smoother.reset();
-    smootherLastScroll.reset();
+    changeSmoother.reset();
+    lastChangeSmoother.reset();
     accumulator.reset();
-    curvatureSmoother.reset();
     line = true;
     base = Point::invalidPoint;
     doubleBase = Point::invalidPoint;
-    alcs.reset();
-    accs.reset();
-    acs.reset();
+    absLineChangeSmoother.reset();
+    absCircleChangeSmoother.reset();
 }
 
 void ScrollHandler::iterate(TouchHistory history, TouchController &controller, Paint &paint) {
@@ -63,11 +59,6 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     controller.lockPointerPosition();
 
     Point last = history.getLastPoint();
-    Point lastRelBase = last - base;
-    Point baseRelDoubleBase = base - doubleBase;
-    Point lastRelDoubleBase = last - doubleBase;
-    Point baseRelCenter = base - center;
-    Point doubleBaseRelCenter = doubleBase - center;
 
     if (doubleBase.invalid) {
         doubleBase = last;
@@ -78,28 +69,35 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
             base = last;
         return;
     }
+    Point lastRelBase = last - base;
     if (~lastRelBase < minDistanceSq) {
-        smootherLastScroll.add(0);
+        lastChangeSmoother.add(0);
         return;
     }
+
+    Point baseRelDoubleBase = base - doubleBase;
+    Point lastRelDoubleBase = last - doubleBase;
+    Point baseRelCenter = base - center;
+    Point doubleBaseRelCenter = doubleBase - center;
 
     double cross = lastRelBase * baseRelDoubleBase / !lastRelBase / !baseRelDoubleBase;
     double lineChange = lastRelDoubleBase * doubleBaseRelCenter / !doubleBaseRelCenter * lineScale;
     double circleChange = cross * circleScale;
-    double absLineChange = alcs.smooth(fabs(lineChange));
-    double absCircleChange = accs.smooth(fabs(circleChange));
+    double absLineChange = absLineChangeSmoother.smooth(fabs(lineChange));
+    double absCircleChange = absCircleChangeSmoother.smooth(fabs(circleChange));
 
     if (line)
         line = absCircleChange < absLineChange * lineModeChangeResistance;
     else
         line = absLineChange > absCircleChange * lineModeChangeResistance;
 
-    double change = smoother.smooth(line ? lineChange : circleChange);
+    double change = changeSmoother.smooth(line ? lineChange : circleChange);
 
-    if (!line) {
+    if (!line && absCircleChange > absLineChange * lineModeChangeResistance) {
         centerShift = change < 0 ? ++lastRelDoubleBase : --lastRelDoubleBase;
         centerShift = centerShift / !centerShift * .2;
     }
+
     center = base + centerShift;
 
     if (change > transformMin) // todo adjust the transform
@@ -107,7 +105,7 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     else if (change < -transformMin)
         change = (change + transformMin) * 2 - transformMin;
 
-    smootherLastScroll.add(change);
+    lastChangeSmoother.add(change);
 
     controller.scroll(accumulator.accumulate(change));
 

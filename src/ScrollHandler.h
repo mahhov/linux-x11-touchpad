@@ -14,7 +14,7 @@ private:
     const double boundary, threshold;
     bool active;
     Point center;
-    Smoother smoother;
+    Smoother changeSmoother;
     Accumulator accumulator;
 
 public:

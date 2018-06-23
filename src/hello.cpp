@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     TouchHistory history{1000};
     TouchController controller{};
 
-    ScrollHandler scrollHandler{2, .9, .004, .13};
+    ScrollHandler scrollHandler{2, .91, .004, .13};
     GlideHandler glideHandler{3, 700, .9, 1, 50};
     ScrollGlideHandler scrollGlideHandler{2, .95, .1, .3};
 
@@ -32,7 +32,7 @@ int main(int argc, char *argv[]) {
             scrollGlideHandler.update(history, controller, scrollState);
 
         paint.repaint();
-        sleep(2);
+//        sleep(2);
     }
 }
 
