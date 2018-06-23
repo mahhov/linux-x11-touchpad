@@ -1,12 +1,16 @@
+#include <cmath>
 #include "ScrollHandler.h"
 
-
 static Point centerShift = Point::invalidPoint; // todo cleanup
-static Smoother smoother1{.5};
+static Smoother curvatureSmoother{.5};
 static bool line;
 static double x;
 static Point base = Point::invalidPoint, doubleBase = Point::invalidPoint;
 static Smoother smootherLastScroll{.13};
+
+static Smoother alcs{.1};
+static Smoother accs{.1};
+static Smoother acs{.1};
 
 ScrollHandler::ScrollHandler(int delta, double boundary, double threshold, double smoothness) :
         delta(delta),
@@ -38,75 +42,86 @@ void ScrollHandler::init(Point movement) {
     smoother.reset();
     smootherLastScroll.reset();
     accumulator.reset();
-    smoother1.reset();
+    curvatureSmoother.reset();
     line = true;
     base = Point::invalidPoint;
     doubleBase = Point::invalidPoint;
+    alcs.reset();
+    accs.reset();
+    acs.reset();
 }
 
 void ScrollHandler::iterate(TouchHistory history, TouchController &controller, Paint &paint) {
     if (!active)
         return;
 
-    Point lastPoint = history.getLastPoint();
+    controller.lockPointerPosition();
+
+    Point last = history.getLastPoint();
+    Point lastRelBase = last - base;
+    Point baseRelDoubleBase = base - doubleBase;
+    Point lastRelDoubleBase = last - doubleBase;
+    Point baseRelCenter = base - center;
+    Point doubleBaseRelCenter = doubleBase - center;
 
     if (doubleBase.invalid) {
-        doubleBase = lastPoint;
+        doubleBase = last;
         return;
     }
 
-    double minDistance = .005;
+    double minDistance = .005, minDistanceSq = minDistance * minDistance;
 
     if (base.invalid) {
-        if (!(lastPoint - doubleBase) > minDistance)
-            base = lastPoint;
+        if (!(last - doubleBase) > minDistance)
+            base = last;
         return;
     }
 
-    if (!(lastPoint - base) < minDistance) {
+    if (~lastRelBase < minDistanceSq) {
         smootherLastScroll.smooth(0);
         return;
     }
 
-    controller.lockPointerPosition();
+    double cross = lastRelBase * baseRelDoubleBase / !lastRelBase / !baseRelDoubleBase;
+    double curvature = fabs(cross / fmax(!lastRelDoubleBase, .00001));
 
-    Point last = lastPoint;
-    Point movement = last - base;
-    Point relativeBase = base - center;
-    if (near0(!movement, .003) || near0(!relativeBase, .01))
-        return;
+    curvature = curvatureSmoother.smooth(curvature, .1);
 
-    Point vec1 = base - doubleBase;
-    Point vec2 = last - base;
-    Point vec3 = last - doubleBase;
-    double cros = vec2 * vec1 / !vec1 / !vec2;
-    double curvature = cros / (!vec3 > .01 ? !vec3 : .01);
-    if (curvature != curvature)
-        return;
-    if (curvature < 0)
-        curvature = -curvature;
-    curvature = smoother1.smooth(curvature, !vec3 * 15);
+    // todo change baseRelCenter to doubleBaseRelCenter
+    double lineChange = lastRelDoubleBase * doubleBaseRelCenter / !doubleBaseRelCenter * 12.5;
+    double circleChange = cross * 4.25;
+    double absLineChange = fabs(lineChange / !lastRelDoubleBase / 40);
+    double absCircleChange = fabs(circleChange);
 
-    if (line && !near0(curvature, 2.5))
+    absLineChange = alcs.smooth(absLineChange);
+    absCircleChange = accs.smooth(absCircleChange);
+
+    double s = 1.5;
+
+    if (line && absCircleChange > absLineChange * s)
         line = false;
-    if (!line && near0(curvature, 1))
+    else if (!line && absLineChange > absCircleChange * s)
         line = true;
 
     double change;
-
-    if (line)
-        change = vec2 * relativeBase / !relativeBase * 20;
-    else {
-        centerShift = last - doubleBase;
-        centerShift = cros < 0 ? ++centerShift : --centerShift;
+    if (!line) {
+        change = smoother.smooth(circleChange);
+        centerShift = change < 0 ? ++lastRelDoubleBase : --lastRelDoubleBase;
         centerShift = centerShift / !centerShift * .2;
-        change = cros * 2;
-    }
+    } else
+        change = smoother.smooth(lineChange);
+
     center = base + centerShift;
 
-    double rawChange = change;
-    change = smoother.smooth(change);
-    smootherLastScroll.smooth(change);
+    double min = .15;
+    if (change > min)
+        change = (change - min) * 2 + min;
+    else if (change < -min)
+        change = (change + min) * 2 - min;
+
+    // todo adjust the change transform
+
+    smootherLastScroll.add(change);
     x += change;
 
     controller.scroll(accumulator.accumulate(change));
@@ -119,22 +134,23 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     paint.addPoint(base);
     paint.addPoint(doubleBase);
     paint.addPoint(last);
-    paint.addPoint(last - movement * .1 / !movement); // base tail
+    paint.addPoint(last - lastRelBase * .1 / !lastRelBase); // base tail
     paint.addPoint(center);
 
-    paint.addPoint({.1, Paint::scale(rawChange, .3)});
-    paint.addPoint({.13, Paint::scale(change, .3)});
-    paint.addPoint({.3, Paint::scale(curvature, 1. / 80)});
-    paint.addPoint({.2, Paint::scale(x, .01)});
-    paint.addPoint({.1, Paint::scale(0, 1)});
+    paint.addPoint({.08, Paint::scale(change, .3)});
+    paint.addPoint({.15, Paint::scale(curvature, 1. / 80)});
+    paint.addPoint({.28, Paint::scale(x, .01)});
+    paint.addPoint({0, Paint::scale(0, 1)});
     paint.addPoint({boundary, 0});
     paint.addPoint({boundary, 1});
 
-    // todo clean up
-    // todo use x12 to do smaller scroll increments
+    paint.addPoint({.35, Paint::scale(lineChange, .25)});
+    paint.addPoint({.38, Paint::scale(circleChange, .25)});
+    paint.addPoint({.45, Paint::scale(absLineChange, .25)});
+    paint.addPoint({.48, Paint::scale(absCircleChange, .25)});
 
     doubleBase = base;
-    base = lastPoint;
+    base = last;
 }
 
 void ScrollHandler::conclude(TouchController &controller) {
@@ -146,8 +162,4 @@ ScrollActivity ScrollHandler::getScrollActivity(bool prevActive, bool active) {
     if (prevActive)
         return active ? ScrollActivity::SCROLLING : ScrollActivity::STOPPED_SCROLLING;
     return active ? ScrollActivity::STARTED_SCROLLING : ScrollActivity::NOT_SCROLLING;
-}
-
-bool ScrollHandler::near0(double value, double threshold) {
-    return value < threshold && value > -threshold;
 }

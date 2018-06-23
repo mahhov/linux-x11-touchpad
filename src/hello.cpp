@@ -9,10 +9,6 @@ void sleep(int milli) {
     std::this_thread::sleep_for(std::chrono::milliseconds(milli));
 }
 
-void printTouch(Touch touch) {
-    printf("%d %f %f\n", touch.touchDown, touch.x, touch.y);
-}
-
 int main(int argc, char *argv[]) {
     Paint paint{};
     paint.init(400, 5);
