@@ -13,7 +13,6 @@ private:
     const int delta;
     const double boundary, threshold;
     bool active;
-    Point center;
     Smoother changeSmoother;
     Accumulator accumulator;
 

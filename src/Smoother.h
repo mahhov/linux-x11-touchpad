@@ -8,7 +8,7 @@ private:
 public:
     explicit Smoother(double weight);
 
-    void reset();
+    void reset(double value = 0);
 
     double smooth(double value);
 

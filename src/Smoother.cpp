@@ -2,8 +2,8 @@
 
 Smoother::Smoother(double weight) : weight(weight) {}
 
-void Smoother::reset() {
-    aggregate = 0;
+void Smoother::reset(double value) {
+    aggregate = value;
 }
 
 double Smoother::smooth(double value) {

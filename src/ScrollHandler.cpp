@@ -1,7 +1,7 @@
 #include <cmath>
 #include "ScrollHandler.h"
 
-static Point centerShift = Point::invalidPoint; // todo cleanup
+static bool clockwise;
 static bool line;
 static Point base = Point::invalidPoint, doubleBase = Point::invalidPoint;
 static Smoother lastChangeSmoother{.13};
@@ -10,8 +10,8 @@ static Smoother absLineChangeSmoother{.1};
 static Smoother absCircleChangeSmoother{.1};
 
 double minDistance = .005, minDistanceSq = minDistance * minDistance;
-double lineScale = 14;
-double circleScale = 4;
+double lineScale = 25;
+double circleScale = 375;
 double lineModeChangeResistance = 1.5;
 double transformMin = .15;
 
@@ -20,7 +20,6 @@ ScrollHandler::ScrollHandler(int delta, double boundary, double threshold, doubl
         boundary(boundary),
         threshold(threshold),
         active(false),
-        center(Point::invalidPoint),
         changeSmoother(smoothness) {
 }
 
@@ -40,16 +39,15 @@ void ScrollHandler::init(Point movement) {
     if (!(active = movement.x > boundary))
         return;
 
-    centerShift = {-.2, 0};
-    center = {movement.x - .2, movement.y}; // todo make const
     changeSmoother.reset();
     lastChangeSmoother.reset();
     accumulator.reset();
     line = true;
-    base = Point::invalidPoint;
-    doubleBase = Point::invalidPoint;
-    absLineChangeSmoother.reset();
+    clockwise = true;
+    absLineChangeSmoother.reset(2);
     absCircleChangeSmoother.reset();
+    doubleBase = movement + Point{0, -minDistance * 2};
+    base = movement + Point{0, -minDistance};
 }
 
 void ScrollHandler::iterate(TouchHistory history, TouchController &controller, Paint &paint) {
@@ -60,29 +58,18 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
 
     Point last = history.getLastPoint();
 
-    if (doubleBase.invalid) {
-        doubleBase = last;
-        return;
-    }
-    if (base.invalid) {
-        if (!(last - doubleBase) > minDistance)
-            base = last;
-        return;
-    }
     Point lastRelBase = last - base;
+    Point baseRelDoubleBase = base - doubleBase;
+
     if (~lastRelBase < minDistanceSq) {
         lastChangeSmoother.add(0);
         return;
     }
 
-    Point baseRelDoubleBase = base - doubleBase;
-    Point lastRelDoubleBase = last - doubleBase;
-    Point baseRelCenter = base - center;
-    Point doubleBaseRelCenter = doubleBase - center;
-
-    double cross = lastRelBase * baseRelDoubleBase / !lastRelBase / !baseRelDoubleBase;
-    double lineChange = lastRelDoubleBase * doubleBaseRelCenter / !doubleBaseRelCenter * lineScale;
-    double circleChange = cross * circleScale;
+    double lineChange = lastRelBase % baseRelDoubleBase / !baseRelDoubleBase * lineScale;
+    if (clockwise)
+        lineChange = -lineChange;
+    double circleChange = lastRelBase * baseRelDoubleBase / !baseRelDoubleBase * circleScale;
     double absLineChange = absLineChangeSmoother.smooth(fabs(lineChange));
     double absCircleChange = absCircleChangeSmoother.smooth(fabs(circleChange));
 
@@ -91,20 +78,12 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     else
         line = absLineChange > absCircleChange * lineModeChangeResistance;
 
-    printf("line %d\n", line);
+    if (line)
+        clockwise = lineChange < 0;
+    else
+        clockwise = circleChange < 0;
 
     double change = changeSmoother.smooth(line ? lineChange : circleChange);
-
-    if (!line && absCircleChange > absLineChange * lineModeChangeResistance) {
-        centerShift = change < 0 ? ++lastRelDoubleBase : --lastRelDoubleBase;
-        centerShift = centerShift / !centerShift * .2;
-    }
-
-    center = base + centerShift;
-
-    // todo use dot with base instead of cross with center for line change
-
-    // todo investiage why small movements start with opposite direction center
 
     if (change > transformMin) // todo adjust the transform
         change = (change - transformMin) * 2 + transformMin;
@@ -114,6 +93,35 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     lastChangeSmoother.add(change);
 
     controller.scroll(accumulator.accumulate(change));
+
+    // PAINTING
+
+    paint.addPoint({0, clockwise ? .75 : .25});
+    paint.addPoint(last);
+    paint.addPoint(base);
+    paint.addPoint(doubleBase);
+
+    static double x = 0;
+    double xScale = lineScale;
+    x += change;
+    if (x > xScale)
+        x = -xScale;
+    if (x < -xScale)
+        x = xScale;
+    paint.addPoint({.1, paint.scale(x, .5 / xScale)});
+
+    double changeScale = 3;
+    paint.addPoint({.3, paint.scale(lineChange, changeScale)});
+    paint.addPoint({.325, .5});
+    paint.addPoint({line ? .3 : .35, .5});
+    paint.addPoint({.35, paint.scale(circleChange, changeScale)});
+
+    paint.addPoint({.4, paint.scale(absLineChange, changeScale)});
+    paint.addPoint({.425, .5});
+    paint.addPoint({line ? .4 : .45, .5});
+    paint.addPoint({.45, paint.scale(absCircleChange, changeScale)});
+
+    // PAINTING END
 
     doubleBase = base;
     base = last;
