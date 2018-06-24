@@ -37,3 +37,7 @@ int main(int argc, char *argv[]) {
 }
 
 // todo change all object paramters to be by reference
+// todo ignore other fingers during multi touch
+// todo use uinput for smaller scroll outputs
+// todo use base dot product instead of center cross product for line changes
+// todo use non-linear split between line and circle catagorization

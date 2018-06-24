@@ -91,6 +91,8 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     else
         line = absLineChange > absCircleChange * lineModeChangeResistance;
 
+    printf("line %d\n", line);
+
     double change = changeSmoother.smooth(line ? lineChange : circleChange);
 
     if (!line && absCircleChange > absLineChange * lineModeChangeResistance) {
@@ -99,6 +101,10 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     }
 
     center = base + centerShift;
+
+    // todo use dot with base instead of cross with center for line change
+
+    // todo investiage why small movements start with opposite direction center
 
     if (change > transformMin) // todo adjust the transform
         change = (change - transformMin) * 2 + transformMin;
