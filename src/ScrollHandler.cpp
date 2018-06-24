@@ -78,12 +78,12 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     else
         line = absLineChange > absCircleChange * lineModeChangeResistance;
 
+    double change = changeSmoother.smooth(line ? lineChange : circleChange);
+
     if (line)
         clockwise = lineChange < 0;
     else
-        clockwise = circleChange < 0;
-
-    double change = changeSmoother.smooth(line ? lineChange : circleChange);
+        clockwise = change < 0;
 
     if (change > transformMin) // todo adjust the transform
         change = (change - transformMin) * 2 + transformMin;
