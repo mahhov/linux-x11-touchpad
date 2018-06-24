@@ -10,8 +10,8 @@ static Smoother absLineChangeSmoother{.1};
 static Smoother absCircleChangeSmoother{.1};
 
 double minDistance = .005, minDistanceSq = minDistance * minDistance;
-double lineScale = 25;
-double circleScale = 375;
+double lineScale = 17;
+double circleScale = 15 * lineScale;
 double lineModeChangeResistance = 1.5;
 double transformMin = .15;
 
@@ -94,7 +94,7 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
 
     controller.scroll(accumulator.accumulate(change));
 
-    // PAINTING
+    // PAINTING - FOR DEBUGGING
 
     paint.addPoint({0, clockwise ? .75 : .25});
     paint.addPoint(last);
