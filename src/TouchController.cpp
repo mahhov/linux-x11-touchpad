@@ -10,7 +10,7 @@ TouchController::TouchController() {
     fd = open(EVENT_DEVICE, O_RDONLY);
     fprintf(stderr, "reading %s\n", EVENT_DEVICE);
 
-    if (fd != 0)
+    if (fd == -1)
         fprintf(stderr, "%s is not a vaild device\n", EVENT_DEVICE);
 
     int edevr = libevdev_new_from_fd(fd, &evdev);
@@ -37,7 +37,7 @@ TouchController::~TouchController() {
 }
 
 void TouchController::update() {
-    while (poll(&pollyFd, 1, 10)) {
+    while (poll(&pollyFd, 1, 10)) { // todo play with timeout, why do we need it?
         read(fd, &event, eventSize);
 
         if (event.type == EV_KEY) {
