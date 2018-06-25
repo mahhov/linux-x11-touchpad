@@ -8,6 +8,7 @@
 #include <X11/Xlib.h>
 #include <poll.h>
 #include <X11/extensions/XTest.h>
+#include <libevdev-1.0/libevdev/libevdev.h>
 #include "Touch.h"
 #include "TouchController.h"
 #include "Touch.h"
@@ -23,13 +24,13 @@ private:
     Display *display;
     Window root;
     int fd;
+    libevdev *evdev;
     size_t eventSize;
     PollFd pollyFd;
     InputEvent event;
     int minX, maxX, minY, maxY;
     Touch touch;
     bool pointerLocked;
-    int pointerLockX, pointerLockY;
 
 public:
     TouchController();

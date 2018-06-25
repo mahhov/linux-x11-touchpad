@@ -10,8 +10,12 @@ TouchController::TouchController() {
     fd = open(EVENT_DEVICE, O_RDONLY);
     fprintf(stderr, "reading %s\n", EVENT_DEVICE);
 
-    if (fd == -1)
+    if (fd != 0)
         fprintf(stderr, "%s is not a vaild device\n", EVENT_DEVICE);
+
+    int edevr = libevdev_new_from_fd(fd, &evdev);
+    if (edevr != 0)
+        printf("unable to open libevdev pointer\n");
 
     eventSize = sizeof(InputEvent);
 
@@ -31,6 +35,7 @@ TouchController::TouchController() {
 
 TouchController::~TouchController() {
     XCloseDisplay(display);
+    libevdev_free(evdev);
     close(fd);
 }
 
@@ -84,18 +89,15 @@ Touch TouchController::getTouch() {
 }
 
 void TouchController::lockPointerPosition() {
-    if (pointerLocked) {
-        setPointerPosition(pointerLockX, pointerLockY);
+    if (pointerLocked)
         return;
-    }
-
     pointerLocked = true;
-    Window window;
-    int integer;
-    unsigned int uinteger;
-    XQueryPointer(display, root, &window, &window, &pointerLockX, &pointerLockY, &integer, &integer, &uinteger);
+    libevdev_grab(evdev, LIBEVDEV_GRAB);
 }
 
 void TouchController::unlockPointerPosition() {
+    if (!pointerLocked)
+        return;
     pointerLocked = false;
+    libevdev_grab(evdev, LIBEVDEV_UNGRAB);
 }

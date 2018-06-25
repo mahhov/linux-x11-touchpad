@@ -11,5 +11,6 @@ add_executable(helloWorldC__ ${srcFiles})
 
 find_package(X11)
 find_package(Xtst)
+find_package(evdev)
 
-target_link_libraries(helloWorldC__ X11 Xtst)
+target_link_libraries(helloWorldC__ X11 Xtst evdev)

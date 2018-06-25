@@ -85,7 +85,7 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     else
         clockwise = change < 0;
 
-    if (change > transformMin) // todo adjust the transform
+    if (change > transformMin)
         change = (change - transformMin) * 2 + transformMin;
     else if (change < -transformMin)
         change = (change + transformMin) * 2 - transformMin;
