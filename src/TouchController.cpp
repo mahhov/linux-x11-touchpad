@@ -38,10 +38,13 @@ void TouchController::update() {
     while (poll(&pollyFd, 1, 10)) {
         read(fd, &event, eventSize);
 
-        if (event.type == EV_KEY && event.code == BTN_TOUCH)
-            touch.touchDown = (bool) event.value;
+        if (event.type == EV_KEY) {
+            if (event.code == BTN_TOUCH)
+                touch.touchDown = (bool) event.value;
+            else if (event.code == BTN_TOOL_DOUBLETAP)
+                touch.touchDown = false;
 
-        else if (event.type == EV_ABS)
+        } else if (event.type == EV_ABS)
             if (event.code == ABS_X) {
                 touch.rawX = event.value;
                 touch.x = 1. * (touch.rawX - minX) / (maxX - minX);
