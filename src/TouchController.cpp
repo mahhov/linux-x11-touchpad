@@ -22,13 +22,10 @@ TouchController::TouchController() {
     pollyFd.fd = fd;
     pollyFd.events = POLLIN;
 
-    InputAbsinfo absinfo{};
-    ioctl(fd, EVIOCGABS(ABS_X), &absinfo);
-    minX = absinfo.minimum;
-    maxX = absinfo.maximum;
-    ioctl(fd, EVIOCGABS(ABS_Y), &absinfo);
-    minY = absinfo.minimum;
-    maxY = absinfo.maximum;
+    minX = libevdev_get_abs_minimum(evdev, ABS_X);
+    maxX = libevdev_get_abs_maximum(evdev, ABS_X);
+    minY = libevdev_get_abs_minimum(evdev, ABS_Y);
+    maxY = libevdev_get_abs_maximum(evdev, ABS_Y);
 
     touch = {};
 }
