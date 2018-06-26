@@ -36,7 +36,7 @@ void TouchController::findDevice() {
         std::string pathString = prefix + std::to_string(i++);
         const char *path = pathString.c_str();
 
-        fd = open(path, O_RDONLY);
+        fd = open(path, O_RDONLY); // todo add O_NONBLOCK?
         if (fd == -1) {
             fprintf(stderr, "Unable to open event file %d, %s\n", i, path);
             fprintf(stderr, "Unable to find touch device, iterated %d devices\n", i);
