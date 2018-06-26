@@ -1,5 +1,5 @@
+#include <cmath>
 #include "ScrollGlideHandler.h"
-
 
 ScrollGlideHandler::ScrollGlideHandler(double scale, double friction, double minimum, double minimumInitial) : scale(scale),
                                                                                                                friction(friction),
@@ -16,7 +16,7 @@ void ScrollGlideHandler::update(TouchHistory history, TouchController &controlle
 
 void ScrollGlideHandler::init(double scrollSpeed) {
     scrollSpeed *= scale;
-    if (!(active = scrollSpeed > minimumInitial || -scrollSpeed > minimumInitial))
+    if (!(active = fabs(scrollSpeed) > minimumInitial))
         return;
     velocity = scrollSpeed;
     accumulator.reset();
@@ -26,7 +26,7 @@ void ScrollGlideHandler::iterate(TouchController &controller) {
     if (!active)
         return;
     velocity = velocity * friction;
-    active = velocity > minimum || -velocity > minimum;; // todo use global near0 in scroll glide handler & glid ehandler
+    active = fabs(velocity) > minimum;
     controller.scroll(accumulator.accumulate(velocity));
 }
 

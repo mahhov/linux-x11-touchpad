@@ -14,8 +14,8 @@ TouchController::TouchController() {
     pollyFd.fd = fd;
     pollyFd.events = POLLIN;
 
-    minX = libevdev_get_abs_minimum(device, ABS_X);
     maxX = libevdev_get_abs_maximum(device, ABS_X);
+    minX = libevdev_get_abs_minimum(device, ABS_X);
     minY = libevdev_get_abs_minimum(device, ABS_Y);
     maxY = libevdev_get_abs_maximum(device, ABS_Y);
 
