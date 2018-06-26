@@ -5,35 +5,50 @@ TouchController::TouchController() {
     root = DefaultRootWindow(display);
 
     if (getuid() != 0)
-        fprintf(stderr, "You are not root! This may not work...\n");
+        fprintf(stderr, "Need root\n");
 
-    fd = open(EVENT_DEVICE, O_RDONLY);
-    fprintf(stderr, "reading %s\n", EVENT_DEVICE);
-
-    if (fd == -1)
-        fprintf(stderr, "%s is not a vaild device\n", EVENT_DEVICE);
-
-    int edevr = libevdev_new_from_fd(fd, &evdev);
-    if (edevr != 0)
-        printf("unable to open libevdev pointer\n");
+    findDevice();
 
     eventSize = sizeof(InputEvent);
 
     pollyFd.fd = fd;
     pollyFd.events = POLLIN;
 
-    minX = libevdev_get_abs_minimum(evdev, ABS_X);
-    maxX = libevdev_get_abs_maximum(evdev, ABS_X);
-    minY = libevdev_get_abs_minimum(evdev, ABS_Y);
-    maxY = libevdev_get_abs_maximum(evdev, ABS_Y);
+    minX = libevdev_get_abs_minimum(device, ABS_X);
+    maxX = libevdev_get_abs_maximum(device, ABS_X);
+    minY = libevdev_get_abs_minimum(device, ABS_Y);
+    maxY = libevdev_get_abs_maximum(device, ABS_Y);
 
     touch = {};
 }
 
 TouchController::~TouchController() {
     XCloseDisplay(display);
-    libevdev_free(evdev);
+    libevdev_free(device);
     close(fd);
+}
+
+void TouchController::findDevice() {
+    const std::string prefix = "/dev/input/event";
+    int i = 0;
+
+    while (true) {
+        std::string pathString = prefix + std::to_string(i++);
+        const char *path = pathString.c_str();
+
+        fd = open(path, O_RDONLY);
+        if (fd == -1) {
+            fprintf(stderr, "Unable to open event file %d, %s\n", i, path);
+            fprintf(stderr, "Unable to find touch device, iterated %d devices\n", i);
+            return;
+        }
+        if (libevdev_new_from_fd(fd, &device) != 0)
+            fprintf(stderr, "Unable to open libevdev device from fd %d, device %d\n", fd, i);
+        if (libevdev_has_event_type(device, EV_ABS))
+            return;
+        libevdev_free(device);
+        close(fd);
+    }
 }
 
 void TouchController::update() {
@@ -89,12 +104,12 @@ void TouchController::lockPointerPosition() {
     if (pointerLocked)
         return;
     pointerLocked = true;
-    libevdev_grab(evdev, LIBEVDEV_GRAB);
+    libevdev_grab(device, LIBEVDEV_GRAB);
 }
 
 void TouchController::unlockPointerPosition() {
     if (!pointerLocked)
         return;
     pointerLocked = false;
-    libevdev_grab(evdev, LIBEVDEV_UNGRAB);
+    libevdev_grab(device, LIBEVDEV_UNGRAB);
 }

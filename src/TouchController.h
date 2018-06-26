@@ -13,8 +13,6 @@
 #include "TouchController.h"
 #include "Touch.h"
 
-#define EVENT_DEVICE "/dev/input/event5" // todo determien which event stream is correct one
-
 typedef input_event InputEvent;
 typedef pollfd PollFd;
 typedef input_absinfo InputAbsinfo;
@@ -24,7 +22,7 @@ private:
     Display *display;
     Window root;
     int fd;
-    libevdev *evdev;
+    libevdev *device;
     size_t eventSize;
     PollFd pollyFd;
     InputEvent event;
@@ -37,6 +35,10 @@ public:
 
     ~TouchController();
 
+private:
+    void findDevice();
+
+public:
     void update();
 
     void movePointerPosition(int x, int y);
