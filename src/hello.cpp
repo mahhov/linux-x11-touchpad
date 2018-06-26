@@ -45,47 +45,40 @@ void emit(int fd, int type, int code, int val) {
     write(fd, &ie, sizeof(ie));
 }
 
-int main(void) {
-    int myButton = BTN_LEFT;
-
+int main() {
     struct uinput_setup usetup;
+    memset(&usetup, 0, sizeof(usetup));
+    strcpy(usetup.name, "Example device");
 
     int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
 
-    /* enable mouse button left and relative events */
     ioctl(fd, UI_SET_EVBIT, EV_KEY);
     ioctl(fd, UI_SET_KEYBIT, BTN_LEFT);
-    ioctl(fd, UI_SET_KEYBIT, myButton);
 
     ioctl(fd, UI_SET_EVBIT, EV_REL);
     ioctl(fd, UI_SET_RELBIT, REL_X);
     ioctl(fd, UI_SET_RELBIT, REL_Y);
-
-    memset(&usetup, 0, sizeof(usetup));
-    usetup.id.bustype = BUS_USB;
-    usetup.id.vendor = 0x1234; /* sample vendor */
-    usetup.id.product = 0x5678; /* sample product */
-    strcpy(usetup.name, "Example device");
+    ioctl(fd, UI_SET_RELBIT, REL_WHEEL);
 
     ioctl(fd, UI_DEV_SETUP, &usetup);
     ioctl(fd, UI_DEV_CREATE);
 
     usleep(300 * 1000);
 
-    printf("press\n");
-    emit(fd, EV_KEY, myButton, 1);
+    emit(fd, EV_REL, REL_WHEEL, 0);
     emit(fd, EV_SYN, SYN_REPORT, 0);
-    usleep(300 * 1000);
-    printf("release\n");
-    emit(fd, EV_KEY, myButton, 0);
-    emit(fd, EV_SYN, SYN_REPORT, 0);
+    usleep(10 * 1000);
+
+    for (int i = 0; i < 1; i++) {
+        emit(fd, EV_REL, REL_WHEEL, 1);
+        emit(fd, EV_SYN, SYN_REPORT, 0);
+        usleep(10 * 1000);
+    }
+
     usleep(300 * 1000);
     printf("done\n");
-
     ioctl(fd, UI_DEV_DESTROY);
     close(fd);
-
-    return 0;
 }
 
 // todo change all object paramters to be by reference
