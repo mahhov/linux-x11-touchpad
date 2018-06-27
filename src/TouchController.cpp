@@ -7,28 +7,33 @@ TouchController::TouchController() {
     if (getuid() != 0)
         fprintf(stderr, "Need root\n");
 
-    findDevice();
+    findInputDevice();
+    createOutputDevice();
 
     eventSize = sizeof(InputEvent);
 
-    pollyFd.fd = fd;
+    pollyFd.fd = inputFd;
     pollyFd.events = POLLIN;
 
-    maxX = libevdev_get_abs_maximum(device, ABS_X);
-    minX = libevdev_get_abs_minimum(device, ABS_X);
-    minY = libevdev_get_abs_minimum(device, ABS_Y);
-    maxY = libevdev_get_abs_maximum(device, ABS_Y);
+    maxX = libevdev_get_abs_maximum(inputDevice, ABS_X);
+    minX = libevdev_get_abs_minimum(inputDevice, ABS_X);
+    minY = libevdev_get_abs_minimum(inputDevice, ABS_Y);
+    maxY = libevdev_get_abs_maximum(inputDevice, ABS_Y);
 
     touch = {};
 }
 
 TouchController::~TouchController() {
     XCloseDisplay(display);
-    libevdev_free(device);
-    close(fd);
+
+    libevdev_free(inputDevice);
+    close(inputFd);
+
+    libevdev_uinput_destroy(outputDevice);
+    close(outputFd);
 }
 
-void TouchController::findDevice() {
+void TouchController::findInputDevice() {
     const std::string prefix = "/dev/input/event";
     int i = 0;
 
@@ -36,24 +41,43 @@ void TouchController::findDevice() {
         std::string pathString = prefix + std::to_string(i++);
         const char *path = pathString.c_str();
 
-        fd = open(path, O_RDONLY); // todo add O_NONBLOCK?
-        if (fd == -1) {
+        inputFd = open(path, O_RDONLY); // todo add O_NONBLOCK?
+        if (inputFd == -1) {
             fprintf(stderr, "Unable to open event file %d, %s\n", i, path);
             fprintf(stderr, "Unable to find touch device, iterated %d devices\n", i);
             return;
         }
-        if (libevdev_new_from_fd(fd, &device) != 0)
-            fprintf(stderr, "Unable to open libevdev device from fd %d, device %d\n", fd, i);
-        if (libevdev_has_event_type(device, EV_ABS))
+        if (libevdev_new_from_fd(inputFd, &inputDevice) != 0)
+            fprintf(stderr, "Unable to open libevdev device from fd %d, device %d\n", inputFd, i);
+        if (libevdev_has_event_type(inputDevice, EV_ABS))
             return;
-        libevdev_free(device);
-        close(fd);
+        libevdev_free(inputDevice);
+        close(inputFd);
     }
+}
+
+void TouchController::createOutputDevice() {
+    outputFd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
+    if (outputFd == -1) {
+        fprintf(stderr, "Unable to open output event file /dev/uinput\n");
+        return;
+    }
+
+    struct libevdev *seedDevice = libevdev_new();
+    libevdev_set_name(seedDevice, "outputDevice");
+    libevdev_enable_event_type(seedDevice, EV_REL);
+    libevdev_enable_event_code(seedDevice, EV_REL, REL_WHEEL, NULL);
+
+    if (libevdev_uinput_create_from_device(seedDevice, LIBEVDEV_UINPUT_OPEN_MANAGED, &outputDevice) != 0)
+        fprintf(stderr, "Unable to open libevdev uinput device from outputFd %d\n", outputFd);
+
+    libevdev_uinput_write_event(outputDevice, EV_REL, REL_WHEEL, 0);
+    libevdev_uinput_write_event(outputDevice, EV_SYN, SYN_REPORT, 0);
 }
 
 void TouchController::update() {
     while (poll(&pollyFd, 1, 10)) { // todo play with timeout, why do we need it?
-        read(fd, &event, eventSize);
+        read(inputFd, &event, eventSize);
 
         if (event.type == EV_KEY) {
             if (event.code == BTN_TOUCH)
@@ -85,15 +109,8 @@ void TouchController::setPointerPosition(int x, int y) {
 void TouchController::scroll(int delta) {
     if (delta == 0)
         return;
-    while (delta-- > 0) {
-        XTestFakeButtonEvent(display, Button4, True, CurrentTime);
-        XTestFakeButtonEvent(display, Button4, False, CurrentTime);
-    }
-    while (++delta < 0) {
-        XTestFakeButtonEvent(display, Button5, True, CurrentTime);
-        XTestFakeButtonEvent(display, Button5, False, CurrentTime);
-    }
-    XFlush(display);
+    libevdev_uinput_write_event(outputDevice, EV_REL, REL_WHEEL, delta);
+    libevdev_uinput_write_event(outputDevice, EV_SYN, SYN_REPORT, 0);;
 }
 
 Touch TouchController::getTouch() {
@@ -104,12 +121,14 @@ void TouchController::lockPointerPosition() {
     if (pointerLocked)
         return;
     pointerLocked = true;
-    libevdev_grab(device, LIBEVDEV_GRAB);
+    libevdev_grab(inputDevice, LIBEVDEV_GRAB);
+    // todo pointer grabbing is not working
+    // todo do we need to be conservative, or can we re-grab every time
 }
 
 void TouchController::unlockPointerPosition() {
     if (!pointerLocked)
         return;
     pointerLocked = false;
-    libevdev_grab(device, LIBEVDEV_UNGRAB);
+    libevdev_grab(inputDevice, LIBEVDEV_UNGRAB);
 }

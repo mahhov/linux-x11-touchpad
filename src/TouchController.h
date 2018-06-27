@@ -1,17 +1,18 @@
 #ifndef HELLOWORLDC_TOUCHCONTROLLER_H
 #define HELLOWORLDC_TOUCHCONTROLLER_H
 
-#include <iostream>
 #include <fcntl.h>
-#include <unistd.h>
-#include <linux/input.h>
-#include <X11/Xlib.h>
-#include <poll.h>
-#include <X11/extensions/XTest.h>
+#include <iostream>
+#include <libevdev/libevdev-uinput.h>
 #include <libevdev/libevdev.h>
+#include <linux/input.h>
+#include <poll.h>
+#include <unistd.h>
+#include <X11/extensions/XTest.h>
+#include <X11/Xlib.h>
+#include "Touch.h"
 #include "Touch.h"
 #include "TouchController.h"
-#include "Touch.h"
 
 typedef input_event InputEvent;
 typedef pollfd PollFd;
@@ -21,8 +22,9 @@ class TouchController {
 private:
     Display *display;
     Window root;
-    int fd;
-    libevdev *device;
+    int inputFd, outputFd;
+    libevdev *inputDevice;
+    libevdev_uinput *outputDevice;
     size_t eventSize;
     PollFd pollyFd;
     InputEvent event;
@@ -36,7 +38,9 @@ public:
     ~TouchController();
 
 private:
-    void findDevice();
+    void findInputDevice();
+
+    void createOutputDevice();
 
 public:
     void update();
