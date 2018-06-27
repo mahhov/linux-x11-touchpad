@@ -27,7 +27,7 @@ ScrollState ScrollHandler::update(TouchHistory history, TouchController &control
     bool prevActive = active;
 
     if (history.getState() == PRESSED)
-        init(history.getLastPoint());
+        init(controller, history.getLastPoint());
     else if (history.getState() == RELEASED)
         conclude(controller);
     iterate(history, controller, paint);
@@ -35,10 +35,11 @@ ScrollState ScrollHandler::update(TouchHistory history, TouchController &control
     return ScrollState{lastChangeSmoother.get(), getScrollActivity(prevActive, active)};
 }
 
-void ScrollHandler::init(Point movement) {
+void ScrollHandler::init(TouchController &controller, Point movement) {
     if (!(active = movement.x > boundary))
         return;
 
+    controller.lockPointerPosition();
     changeSmoother.reset();
     lastChangeSmoother.reset();
     accumulator.reset();
@@ -53,8 +54,6 @@ void ScrollHandler::init(Point movement) {
 void ScrollHandler::iterate(TouchHistory history, TouchController &controller, Paint &paint) {
     if (!active)
         return;
-
-    controller.lockPointerPosition();
 
     Point last = history.getLastPoint();
 

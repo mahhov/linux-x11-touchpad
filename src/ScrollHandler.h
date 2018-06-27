@@ -22,15 +22,13 @@ public:
     ScrollState update(TouchHistory history, TouchController &controller, Paint &paint);
 
 private:
-    void init(Point movement);
+    void init(TouchController &controller, Point movement);
 
     void iterate(TouchHistory history, TouchController &controller, Paint &paint);
 
     void conclude(TouchController &controller);
 
     static ScrollActivity getScrollActivity(bool prevActive, bool active);
-
-    static bool near0(double value, double threshold);
 };
 
 #endif

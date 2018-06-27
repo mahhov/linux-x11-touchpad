@@ -118,17 +118,12 @@ Touch TouchController::getTouch() {
 }
 
 void TouchController::lockPointerPosition() {
-    if (pointerLocked)
-        return;
     pointerLocked = true;
     libevdev_grab(inputDevice, LIBEVDEV_GRAB);
-    // todo pointer grabbing is not working
-    // todo do we need to be conservative, or can we re-grab every time
+    // todo pointer jumping on finger down after initial grab
 }
 
 void TouchController::unlockPointerPosition() {
-    if (!pointerLocked)
-        return;
     pointerLocked = false;
     libevdev_grab(inputDevice, LIBEVDEV_UNGRAB);
 }
