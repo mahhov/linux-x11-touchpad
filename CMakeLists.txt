@@ -9,8 +9,6 @@ include_directories(src)
 file(GLOB srcFiles src/*.cpp)
 add_executable(helloWorldC__ ${srcFiles})
 
-find_package(X11)
-find_package(Xtst)
-find_package(evdev)
+target_include_directories(helloWorldC__ PRIVATE /usr/include/libevdev-1.0)
 
 target_link_libraries(helloWorldC__ X11 Xtst evdev)

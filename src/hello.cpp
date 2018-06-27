@@ -1,6 +1,7 @@
 #include <thread>
 #include "TouchController.h"
-#include "ScrollHandler.h"
+
+// todo shouldn't relay on std includes from these headers
 
 // void sleep(int milli) {
 //     std::this_thread::sleep_for(std::chrono::milliseconds(milli));
@@ -33,51 +34,34 @@
 //    }
 //}
 
-#include <linux/uinput.h>
-
-void emit(int fd, int type, int code, int val) {
-    struct input_event ie;
-
-    ie.type = type;
-    ie.code = code;
-    ie.value = val;
-
-    write(fd, &ie, sizeof(ie));
-}
+#include <libevdev/libevdev-uinput.h>
 
 int main() {
-    struct uinput_setup usetup;
-    memset(&usetup, 0, sizeof(usetup));
-    strcpy(usetup.name, "Example device");
-
     int fd = open("/dev/uinput", O_WRONLY | O_NONBLOCK);
 
-    ioctl(fd, UI_SET_EVBIT, EV_KEY);
-    ioctl(fd, UI_SET_KEYBIT, BTN_LEFT);
+    struct libevdev_uinput *udevice;
 
-    ioctl(fd, UI_SET_EVBIT, EV_REL);
-    ioctl(fd, UI_SET_RELBIT, REL_X);
-    ioctl(fd, UI_SET_RELBIT, REL_Y);
-    ioctl(fd, UI_SET_RELBIT, REL_WHEEL);
+    struct libevdev *seedDevice = libevdev_new();
+    libevdev_set_name(seedDevice, "test device");
+    libevdev_enable_event_type(seedDevice, EV_REL);
+    libevdev_enable_event_code(seedDevice, EV_REL, REL_X, NULL);
+    libevdev_enable_event_code(seedDevice, EV_REL, REL_Y, NULL);
+    libevdev_enable_event_code(seedDevice, EV_REL, REL_WHEEL, NULL);
+    libevdev_enable_event_type(seedDevice, EV_KEY);
+    libevdev_enable_event_code(seedDevice, EV_KEY, BTN_LEFT, NULL);
 
-    ioctl(fd, UI_DEV_SETUP, &usetup);
-    ioctl(fd, UI_DEV_CREATE);
+    if (libevdev_uinput_create_from_device(seedDevice, LIBEVDEV_UINPUT_OPEN_MANAGED, &udevice) != 0)
+        printf("oh no\n");
 
-    usleep(300 * 1000);
+    usleep(1000 * 1000);
 
-    emit(fd, EV_REL, REL_WHEEL, 0);
-    emit(fd, EV_SYN, SYN_REPORT, 0);
-    usleep(10 * 1000);
+    libevdev_uinput_write_event(udevice, EV_REL, REL_WHEEL, 0);
+    libevdev_uinput_write_event(udevice, EV_SYN, SYN_REPORT, 0);
+    libevdev_uinput_write_event(udevice, EV_REL, REL_WHEEL, 1);
+    libevdev_uinput_write_event(udevice, EV_SYN, SYN_REPORT, 0);
 
-    for (int i = 0; i < 1; i++) {
-        emit(fd, EV_REL, REL_WHEEL, 1);
-        emit(fd, EV_SYN, SYN_REPORT, 0);
-        usleep(10 * 1000);
-    }
+    libevdev_uinput_destroy(udevice);
 
-    usleep(300 * 1000);
-    printf("done\n");
-    ioctl(fd, UI_DEV_DESTROY);
     close(fd);
 }
 
