@@ -30,7 +30,6 @@ private:
     InputEvent event;
     int minX, maxX, minY, maxY;
     Touch touch;
-    bool pointerLocked;
 
 public:
     TouchController();

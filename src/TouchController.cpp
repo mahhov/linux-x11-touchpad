@@ -118,12 +118,10 @@ Touch TouchController::getTouch() {
 }
 
 void TouchController::lockPointerPosition() {
-    pointerLocked = true;
     libevdev_grab(inputDevice, LIBEVDEV_GRAB);
     // todo pointer jumping on finger down after initial grab
 }
 
 void TouchController::unlockPointerPosition() {
-    pointerLocked = false;
     libevdev_grab(inputDevice, LIBEVDEV_UNGRAB);
 }
