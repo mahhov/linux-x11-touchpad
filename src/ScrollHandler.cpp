@@ -11,7 +11,7 @@ static Smoother absCircleChangeSmoother{.1};
 
 double minDistance = .001, minDistanceSq = minDistance * minDistance;
 double lineScale = 17;
-double circleScale = 15 * lineScale;
+double circleScale = .1 * lineScale;
 double lineModeChangeResistance = 1.5;
 double transformMin = .15;
 
@@ -68,7 +68,7 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     double lineChange = lastRelBase % baseRelDoubleBase / !baseRelDoubleBase * lineScale;
     if (clockwise)
         lineChange = -lineChange;
-    double circleChange = lastRelBase * baseRelDoubleBase / !baseRelDoubleBase * circleScale;
+    double circleChange = lastRelBase * baseRelDoubleBase / !lastRelBase / !baseRelDoubleBase * circleScale;
     double absLineChange = absLineChangeSmoother.smooth(fabs(lineChange));
     double absCircleChange = absCircleChangeSmoother.smooth(fabs(circleChange));
 
