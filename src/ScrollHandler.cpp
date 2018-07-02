@@ -9,7 +9,7 @@ static Smoother lastChangeSmoother{.13};
 static Smoother absLineChangeSmoother{.1};
 static Smoother absCircleChangeSmoother{.1};
 
-double minDistance = .005, minDistanceSq = minDistance * minDistance;
+double minDistance = .001, minDistanceSq = minDistance * minDistance;
 double lineScale = 17;
 double circleScale = 15 * lineScale;
 double lineModeChangeResistance = 1.5;

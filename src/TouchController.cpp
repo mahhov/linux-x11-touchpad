@@ -106,6 +106,8 @@ void TouchController::setPointerPosition(int x, int y) {
     XFlush(display);
 }
 
+// todo use libinput for moving pointer
+
 void TouchController::scroll(int delta) {
     if (delta == 0)
         return;
