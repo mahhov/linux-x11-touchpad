@@ -13,7 +13,7 @@ double minDistance = .001, minDistanceSq = minDistance * minDistance;
 double lineScale = 17;
 double circleScale = .1 * lineScale;
 double lineModeChangeResistance = 1.5;
-double transformMin = .15;
+double transformMin = .25;
 
 ScrollHandler::ScrollHandler(int delta, double boundary, double threshold, double smoothness) :
         delta(delta),
@@ -84,10 +84,13 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     else
         clockwise = change < 0;
 
-    if (change > transformMin)
-        change = (change - transformMin) * 2 + transformMin;
-    else if (change < -transformMin)
-        change = (change + transformMin) * 2 - transformMin;
+    double untransformedChange = change;
+
+    if (change > transformMin || change < -transformMin) {
+        double transformShift = (1. - transformMin) * (change > 0 ? 1 : -1);
+        double shiftedChange = change + transformShift;
+        change = shiftedChange * fabs(shiftedChange) - transformShift;
+    }
 
     lastChangeSmoother.add(change);
 
@@ -119,6 +122,9 @@ void ScrollHandler::iterate(TouchHistory history, TouchController &controller, P
     paint.addPoint({.425, .5});
     paint.addPoint({line ? .4 : .45, .5});
     paint.addPoint({.45, paint.scale(absCircleChange, changeScale)});
+
+    paint.addPoint({.5, paint.scale(change, .1)});
+    paint.addPoint({.525, paint.scale(untransformedChange, .1)});
 
     // PAINTING END
 
